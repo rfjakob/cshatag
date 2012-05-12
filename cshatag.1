@@ -1,0 +1,82 @@
+.\" Process this file with
+.\" groff -man -Tascii foo.1
+.\"
+.TH CSHATAG 1 "MAY 2012" Linux "User Manuals"
+.SH NAME
+
+cshatag \- shatag in C
+
+.SH SYNOPSIS
+
+cshatag FILE
+
+.SH DESCRIPTION
+
+cshatag is a minimal re-implementation in C of shatag
+( https://bitbucket.org/maugier/shatag , written in python
+by Maxime Augier).
+
+cshatag is a tool to detect silent data corruption. It writes
+the mtime and the sha256 checksum of a file into the file's
+extended attributes. The filesystem needs to be mounted with
+user_xattr enabled for this to work.
+When run again, it compares stored mtime and checksum. If it
+finds that the mtime is unchanged but the checksum has changed,
+it warns on stderr.
+In any case, the status of the file is printed to stdout
+and the stored checksum is updated.
+
+File statuses that appear on stdout are:
+.br
+	outdated    mtime has changed
+.br
+	ok          mtime has not changed, checksum is correct
+.br
+	corrupt     mtime has not changed, checksum is wrong
+
+cshatag aims to be format-compatible with shatag and uses the
+same extended attributes (see the COMPATIBILITY section).
+
+.SH EXAMPLES
+
+Typically, cshatag will be called from find:
+.br
+# find / -xdev -type f -exec cshatag {} \; > cshatag.log
+.br
+Errors like corrupt files will then be printed to stderr
+or grep for "corrupt" in cshatag.log.
+
+To remove the extended attributes from all files:
+.br
+# find / -xdev -type f -exec setfattr -x user.shatag.ts {} \; -exec setfattr -x user.shatag.sha256 {} \;
+
+.SH "RETURN VALUE"
+
+0 Success
+.br
+1 Wrong number of arguments
+.br
+2 File could not be opened
+.br
+3 File is not a regular file
+.br
+4 Extended attributs could not be written to file
+.br
+5 File is corrupt
+
+.SH COMPATIBILITY
+
+cshatag writes the user.shatag.ts field with full integer
+nanosecond precision, while python uses a double for the
+whole mtime and loses the last few digits.
+
+.SH AUTHOR
+Jakob Unterwurzacher <jakobunt@gmail.com>
+
+.SH COPYRIGHT
+Copyright 2012 Jakob Unterwurzacher. License GPLv2+.
+
+.SH "SEE ALSO"
+sha256sum(1), getfattr(1), setfattr(1)
+
+

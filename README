@@ -1,0 +1,5 @@
+cshatag is a tool to detect silent data corruption. It writes
+the mtime and the sha256 checksum of a file into the file's
+extended attributes.
+
+Please see the man page for a full description.

@@ -1,0 +1,6 @@
+To compile:
+# make
+
+To install the binary to /usr/local/bin and
+the man page to /usr/local/share/man/man1:
+# make install
