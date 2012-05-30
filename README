@@ -11,8 +11,9 @@ SYNOPSIS
 
 
 DESCRIPTION
-       cshatag  is  a  minimal re-implementation in C of shatag ( https://bit‐
-       bucket.org/maugier/shatag , written in python by Maxime Augier).
+       cshatag is a minimal re-implementation in C of shatag
+       (  https://bitbucket.org/maugier/shatag  ,  written in python by Maxime
+       Augier ).
 
        cshatag is a tool to detect silent data corruption. It writes the mtime
        and  the sha256 checksum of a file into the file's extended attributes.
@@ -66,7 +67,7 @@ COPYRIGHT
 
 
 SEE ALSO
-       sha256sum(1), getfattr(1), setfattr(1)
+       shatag(1), sha256sum(1), getfattr(1), setfattr(1)
 
 
 
