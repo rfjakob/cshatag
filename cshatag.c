@@ -74,7 +74,12 @@ char * fhash(FILE *f, char *hex)
 	}
 
 	unsigned char * hash;
-	hash=malloc(HASHLEN);
+	hash=calloc(1,HASHLEN);
+	if(NULL == hash)
+	{
+		fprintf(stderr, "Insufficient memory for hashing file");
+		exit(EXIT_FAILURE);
+	}
 	SHA256_Final(hash, &c);
 
 	//printf("%s\n",bin2hex(hash,HASHLEN));
@@ -184,7 +189,14 @@ char * formatxa(xa_t s)
 	char * buf;
 	char * prettysha;
 	int buflen=HASHLEN*2+100;
-	buf=malloc(buflen);
+	buf=calloc(1,buflen);
+
+	if(NULL == buf)
+	{
+		fprintf(stderr, "Insufficient space to store hash stringed");
+		exit(EXIT_FAILURE);
+	}
+
 	if(strlen(s.sha256)>0)
 		prettysha=s.sha256;
 	else
