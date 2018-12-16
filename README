@@ -40,7 +40,7 @@ EXAMPLES
 
        To remove the extended attributes from all files:
        # find / -xdev -type f -exec setfattr -x  user.shatag.ts  {}  \;  -exec
-       setfattr -x user.shatag.sha256 {} ;
+       setfattr -x user.shatag.sha256 {} \;
 
 
 RETURN VALUE
