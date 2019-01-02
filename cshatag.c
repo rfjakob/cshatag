@@ -131,16 +131,14 @@ xa_t getactualxa(FILE* f)
 xa_t getstoredxa(FILE* f)
 {
     int fd = fileno(f);
-    xa_t xa;
-    xa.s = 0;
-    xa.ns = 0;
+    /* This initializes the whole struct, including the sha256[] array, to zero */
+    xa_t xa = { 0 };
 
     /*
-     * Initialize to zero-length string - if fgetxattr fails this is what we get
+     * If fgetxattr fails, xa.sha256 stays all-zero.
+     * "sizeof - 1" so we always have at least one null terminator.
      */
-    xa.sha256[0] = 0;
-    fgetxattr(fd, "user.shatag.sha256", xa.sha256, sizeof(xa.sha256));
-    xa.sha256[HASHLEN * 2] = 0;
+    fgetxattr(fd, "user.shatag.sha256", xa.sha256, sizeof(xa.sha256) - 1);
 
     /*
      * Example:
