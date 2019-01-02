@@ -10,3 +10,7 @@ install:
 	
 clean:
 	rm -f cshatag
+
+# Depends on cshatag compilation to make sure the syntax is ok.
+format: cshatag
+	clang-format -i *.c
