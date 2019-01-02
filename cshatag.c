@@ -151,12 +151,14 @@ xa_t getstoredxa(FILE *f)
 	 * 1335974989.123456789
 	 *    10     .     9     => len=20
 	 */
-	char ts[100];
+
 	/*
-	 * Initialize to zero-length string - if fgetxattr fails this is what we get
+	 * Initialize to all-zero so that:
+	 * 1) If fgetxattr fails we get a zero-length string
+	 * 2) If fgetxattr suceeds we have at least one null terminator
 	 */
-	ts[0]=0;
-	fgetxattr(fd, "user.shatag.ts", ts, sizeof(ts));
+	char ts[100]={0};
+	fgetxattr(fd, "user.shatag.ts", ts, sizeof(ts)-1);
 	/*
 	 * If sscanf fails (because ts is zero-length) variables stay zero
 	 */
