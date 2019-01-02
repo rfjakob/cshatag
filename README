@@ -1,14 +1,10 @@
 CSHATAG(1)                       User Manuals                       CSHATAG(1)
 
-
-
 NAME
        cshatag - shatag in C
 
-
 SYNOPSIS
        cshatag FILE
-
 
 DESCRIPTION
        cshatag is a minimal re-implementation in C of shatag
@@ -31,7 +27,6 @@ DESCRIPTION
        cshatag aims to be format-compatible with  shatag  and  uses  the  same
        extended attributes (see the COMPATIBILITY section).
 
-
 EXAMPLES
        Typically, cshatag will be called from find:
        # find / -xdev -type f -exec cshatag {} \; > cshatag.log
@@ -42,7 +37,6 @@ EXAMPLES
        # find / -xdev -type f -exec setfattr -x  user.shatag.ts  {}  \;  -exec
        setfattr -x user.shatag.sha256 {} \;
 
-
 RETURN VALUE
        0 Success
        1 Wrong number of arguments
@@ -51,26 +45,18 @@ RETURN VALUE
        4 Extended attributs could not be written to file
        5 File is corrupt
 
-
 COMPATIBILITY
        cshatag  writes  the  user.shatag.ts field with full integer nanosecond
        precision, while python uses a double for the whole mtime and loses the
        last few digits.
 
-
 AUTHOR
        Jakob Unterwurzacher <jakobunt@gmail.com>
-
 
 COPYRIGHT
        Copyright 2012 Jakob Unterwurzacher. License GPLv2+.
 
-
 SEE ALSO
        shatag(1), sha256sum(1), getfattr(1), setfattr(1)
-
-
-
-
 
 Linux                              MAY 2012                         CSHATAG(1)

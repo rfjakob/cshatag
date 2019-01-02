@@ -1,5 +1,8 @@
 PREFIX ?= /usr/local
 
+.PHONY: all
+all: cshatag README
+
 cshatag: cshatag.c
 	gcc -Wall -Wextra cshatag.c -l crypto -o cshatag
 	
@@ -14,3 +17,6 @@ clean:
 # Depends on cshatag compilation to make sure the syntax is ok.
 format: cshatag
 	clang-format -i *.c
+
+README: cshatag.1
+	MANWIDTH=80 man ./cshatag.1 > README
