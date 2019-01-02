@@ -1,7 +1,7 @@
 PREFIX ?= /usr/local
 
-cshatag:
-	gcc cshatag.c -l crypto -o cshatag
+cshatag: cshatag.c
+	gcc -Wall -Wextra cshatag.c -l crypto -o cshatag
 	
 install:
 	cp -v cshatag ${PREFIX}/bin
