@@ -47,7 +47,7 @@ or grep for "corrupt" in cshatag.log.
 
 To remove the extended attributes from all files:
 .br
-# find / -xdev -type f -exec setfattr -x user.shatag.ts {} \\; -exec setfattr -x user.shatag.sha256 {} \;
+# find / -xdev -type f -exec setfattr -x user.shatag.ts {} \\; -exec setfattr -x user.shatag.sha256 {} \\;
 
 .SH "RETURN VALUE"
 
