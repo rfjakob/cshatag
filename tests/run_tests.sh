@@ -16,13 +16,22 @@ if getfattr -n user.shatag.sha256 foo.txt -e hex | grep 00 ; then
 	exit 1
 fi
 
+echo "*** Garbage on stderr? ***"
+rm -f foo.txt
+echo > foo.txt
+OUT=$(../cshatag foo.txt 2>&1 > /dev/null)
+if [[ -n $OUT ]]; then
+	echo "error: garbage on stderr: $OUT"
+	exit 1
+fi
+
 echo "*** Testing modified empty file ***"
 echo > foo.txt
 ../cshatag foo.txt
 ../cshatag foo.txt
 
 echo "*** Testing new 100-byte file ***"
-dd if=/dev/zero of=foo.txt bs=100 count=1
+dd if=/dev/zero of=foo.txt bs=100 count=1 status=none
 ../cshatag foo.txt
 ../cshatag foo.txt
 

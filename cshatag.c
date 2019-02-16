@@ -140,7 +140,7 @@ xa_t getstoredxa(FILE* f)
     int res = fgetxattr(fd, "user.shatag.sha256", xa.sha256, sizeof(xa.sha256));
     /* Make sure we have a NULL terminator */
     xa.sha256[sizeof(xa.sha256) - 1] = 0;
-    if (res < 0) {
+    if (res < 0 && errno != ENODATA) {
         perror("fgetxattr user.shatag.sha256 failed");
     }
 
@@ -157,7 +157,7 @@ xa_t getstoredxa(FILE* f)
      */
     char ts[100] = { 0 };
     res = fgetxattr(fd, "user.shatag.ts", ts, sizeof(ts) - 1);
-    if (res < 0) {
+    if (res < 0 && errno != ENODATA) {
         perror("fgetxattr user.shatag.ts failed");
     }
     /*
