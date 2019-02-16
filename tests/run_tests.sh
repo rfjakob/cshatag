@@ -10,6 +10,12 @@ echo > foo.txt
 ../cshatag foo.txt
 ../cshatag foo.txt
 
+echo "*** Looking for NULL bytes (shouldn't find any)***"
+if getfattr -n user.shatag.sha256 foo.txt -e hex | grep 00 ; then
+	echo "error: NULL byte found"
+	exit 1
+fi
+
 echo "*** Testing modified empty file ***"
 echo > foo.txt
 ../cshatag foo.txt

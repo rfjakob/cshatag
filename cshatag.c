@@ -179,7 +179,7 @@ int writexa(FILE* f, xa_t xa)
     char buf[100];
     snprintf(buf, sizeof(buf), "%llu.%09lu", xa.s, xa.ns);
     err = fsetxattr(fd, "user.shatag.ts", buf, strlen(buf), flags);
-    err |= fsetxattr(fd, "user.shatag.sha256", &xa.sha256, sizeof(xa.sha256), flags);
+    err |= fsetxattr(fd, "user.shatag.sha256", &xa.sha256, SHA256_NIBBLES, flags);
 
     return err;
 }
