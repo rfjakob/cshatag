@@ -35,6 +35,7 @@ echo > foo.txt
 ../cshatag foo.txt > /dev/null
 
 echo "*** Testing new 100-byte file ***"
+rm -f foo.txt
 dd if=/dev/zero of=foo.txt bs=100 count=1 status=none
 ../cshatag foo.txt > /dev/null
 ../cshatag foo.txt > /dev/null
