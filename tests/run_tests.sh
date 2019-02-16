@@ -46,4 +46,16 @@ echo "*** Testing shatag / cshatag v1.1 format without NULL byte ***"
 setfattr -n user.shatag.sha256 -v 0x65336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535 foo.txt
 ../cshatag foo.txt > /dev/null
 
+echo "*** Corrupt file ***"
+echo "123" > foo.txt
+touch -t 201901010000 foo.txt
+set +e
+../cshatag foo.txt &> /dev/null
+RES=$?
+set -e
+if [[ $RES -eq 0 ]]; then
+	echo "should have returned an error code, but returned 0"
+	exit 1
+fi
+
 echo "*** ALL TESTS PASSED ***"
