@@ -2,6 +2,10 @@
 
 set -eu
 
+# Check that we have getfattr / setfattr
+getfattr --version > /dev/null
+setfattr --version > /dev/null
+
 cd "$(dirname "$0")"
 
 echo "*** Testing new empty file ***"
