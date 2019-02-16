@@ -1,9 +1,9 @@
 PREFIX ?= /usr/local
 
 .PHONY: all
-all: cshatag README
+all: cshatag README.md
 
-cshatag: cshatag.c
+cshatag: cshatag.c Makefile
 	gcc -Wall -Wextra cshatag.c -l crypto -o cshatag
 
 .PHONY: install
@@ -15,15 +15,19 @@ install: cshatag
 
 .PHONY: clean
 clean:
-	rm -f cshatag
+	rm -f cshatag README.md
 
 # Depends on cshatag compilation to make sure the syntax is ok.
 .PHONY: format
 format: cshatag
 	clang-format -i *.c
 
-README: cshatag.1
-	MANWIDTH=80 man ./cshatag.1 > README
+README.md: cshatag.1 Makefile
+	@echo "[![Build Status](https://travis-ci.org/rfjakob/cshatag.svg?branch=master)](https://travis-ci.org/rfjakob/cshatag)" > README.md
+	@echo >> README.md
+	@echo '```' >> README.md
+	MANWIDTH=80 man ./cshatag.1 >> README.md
+	@echo '```' >> README.md
 
 .PHONY: test
 test: cshatag

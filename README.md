@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/rfjakob/cshatag.svg?branch=master)](https://travis-ci.org/rfjakob/cshatag)
+
+```
 CSHATAG(1)                       User Manuals                       CSHATAG(1)
 
 NAME
@@ -60,3 +63,4 @@ SEE ALSO
        shatag(1), sha256sum(1), getfattr(1), setfattr(1)
 
 Linux                              MAY 2012                         CSHATAG(1)
+```
