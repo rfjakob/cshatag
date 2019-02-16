@@ -1,4 +1,10 @@
 language: c
+
+addons:
+  apt:
+    packages:
+    - attr
+
 script:
   - make
   - make test
