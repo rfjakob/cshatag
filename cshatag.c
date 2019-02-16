@@ -29,7 +29,8 @@
 #include <time.h>
 
 #define BUFSZ 8192
-#define HASHLEN 256 / 8
+#define SHA256_BYTES 32
+#define SHA256_NIBBLES 64
 
 /**
  * Holds a file's metadata
@@ -37,7 +38,7 @@
 typedef struct {
     unsigned long long s;
     unsigned long ns;
-    char sha256[HASHLEN * 2 + 1];
+    char sha256[SHA256_NIBBLES + 1]; // +1 for NULL byte
 } xa_t;
 
 /**
@@ -72,16 +73,14 @@ char* fhash(FILE* f, char* hex)
     }
 
     unsigned char* hash;
-    hash = calloc(1, HASHLEN);
+    hash = calloc(1, SHA256_BYTES);
     if (NULL == hash) {
         fprintf(stderr, "Insufficient memory for hashing file");
         exit(EXIT_FAILURE);
     }
     SHA256_Final(hash, &c);
 
-    // printf("%s\n",bin2hex(hash,HASHLEN));
-
-    return bin2hex(hash, HASHLEN, hex);
+    return bin2hex(hash, SHA256_BYTES, hex);
 }
 
 /**
@@ -138,7 +137,9 @@ xa_t getstoredxa(FILE* f)
      * If fgetxattr fails, xa.sha256 stays all-zero.
      * "sizeof - 1" so we always have at least one null terminator.
      */
-    int res = fgetxattr(fd, "user.shatag.sha256", xa.sha256, sizeof(xa.sha256) - 1);
+    int res = fgetxattr(fd, "user.shatag.sha256", xa.sha256, sizeof(xa.sha256));
+    /* Make sure we have a NULL terminator */
+    xa.sha256[sizeof(xa.sha256) - 1] = 0;
     if (res < 0) {
         perror("fgetxattr user.shatag.sha256 failed");
     }
@@ -190,7 +191,7 @@ char* formatxa(xa_t s)
 {
     char* buf;
     char* prettysha;
-    int buflen = HASHLEN * 2 + 100;
+    int buflen = SHA256_NIBBLES + 100;
     buf = calloc(1, buflen);
 
     if (NULL == buf) {
