@@ -138,7 +138,10 @@ xa_t getstoredxa(FILE* f)
      * If fgetxattr fails, xa.sha256 stays all-zero.
      * "sizeof - 1" so we always have at least one null terminator.
      */
-    fgetxattr(fd, "user.shatag.sha256", xa.sha256, sizeof(xa.sha256) - 1);
+    int res = fgetxattr(fd, "user.shatag.sha256", xa.sha256, sizeof(xa.sha256) - 1);
+    if (res < 0) {
+        perror("fgetxattr user.shatag.sha256 failed");
+    }
 
     /*
      * Example:
@@ -152,10 +155,13 @@ xa_t getstoredxa(FILE* f)
      * 2) If fgetxattr suceeds we have at least one null terminator
      */
     char ts[100] = { 0 };
-    fgetxattr(fd, "user.shatag.ts", ts, sizeof(ts) - 1);
+    res = fgetxattr(fd, "user.shatag.ts", ts, sizeof(ts) - 1);
+    if (res < 0) {
+        perror("fgetxattr user.shatag.ts failed");
+    }
     /*
-   * If sscanf fails (because ts is zero-length) variables stay zero
-   */
+     * If sscanf fails (because ts is zero-length) variables stay zero
+     */
     sscanf(ts, "%llu.%lu", &xa.s, &xa.ns);
 
     return xa;
