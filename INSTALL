@@ -1,6 +1,8 @@
-To compile:
-# make
+Compile:
+$ make
 
-To install the binary to /usr/local/bin and
-the man page to /usr/local/share/man/man1:
-# make install
+Run the test suite:
+$ make test
+
+Install binary and man page to /usr/local:
+$ sudo make install
