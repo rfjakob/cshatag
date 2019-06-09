@@ -20,6 +20,7 @@
 
 #include <errno.h>
 #include <openssl/sha.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -207,33 +208,32 @@ char* formatxa(xa_t s)
     return buf;
 }
 
-int main(int argc, const char* argv[])
+typedef struct {
+    int errors;
+    int corruptions;
+    int outdated;
+} stats_t;
+
+/**
+ * Checks and updates one file at path "fn".
+ * Updates the counters in "stats" accordingly.
+ */
+void check_file(const char* fn, stats_t* const stats)
 {
-    char const* myname;
-    myname = argv[0];
-
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s FILE\n", myname);
-        exit(1);
-    }
-
-    char const* fn;
-    fn = argv[1];
-
     FILE* f;
     f = fopen(fn, "r");
     if (!f) {
         fprintf(stderr, "Error: could not open file \"%s\": %s\n", fn,
             strerror(errno));
-        exit(2);
+        stats->errors++;
+        return;
     }
 
     xa_t s;
     s = getstoredxa(f);
     xa_t a;
     a = getactualxa(f);
-    int needsupdate = 0;
-    int havecorrupt = 0;
+    bool needsupdate = false;
 
     if (s.s == a.s && s.ns == a.ns) {
         /*
@@ -255,25 +255,44 @@ int main(int argc, const char* argv[])
                 fprintf(stderr, "Error: corrupt file \"%s\"\n", fn);
                 printf("<corrupt> %s\n", fn);
                 printf(" stored: %s\n actual: %s\n", formatxa(s), formatxa(a));
-                needsupdate = 1;
-                havecorrupt = 1;
+                stats->corruptions++;
+                needsupdate = true;
             }
         } else
             printf("<ok> %s\n", fn);
     } else {
         printf("<outdated> %s\n", fn);
         printf(" stored: %s\n actual: %s\n", formatxa(s), formatxa(a));
-        needsupdate = 1;
+        stats->outdated++;
+        needsupdate = true;
     }
 
     if (needsupdate && writexa(f, &a) != 0) {
         fprintf(stderr,
             "Error: could not write extended attributes to file \"%s\": %s\n",
             fn, strerror(errno));
-        exit(4);
+        stats->errors++;
+    }
+    fclose(f);
+}
+
+int main(int argc, const char* argv[])
+{
+    stats_t stats = { 0 };
+    char const* myname;
+    myname = argv[0];
+
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s FILE\n", myname);
+        exit(1);
     }
 
-    if (havecorrupt)
+    char const* fn;
+    fn = argv[1];
+
+    check_file(fn, &stats);
+
+    if (stats.corruptions > 0)
         return 5;
     else
         return 0;
