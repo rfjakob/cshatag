@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/rfjakob/cshatag.svg?branch=master)](https://travis-ci.org/rfjakob/cshatag)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/rfjakob/cshatag.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rfjakob/cshatag/alerts/)
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/rfjakob/cshatag.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rfjakob/cshatag/context:cpp)
 
 ```
 CSHATAG(1)                       User Manuals                       CSHATAG(1)
