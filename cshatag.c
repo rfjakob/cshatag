@@ -255,7 +255,6 @@ int main(int argc, const char* argv[])
                 fprintf(stderr, "Error: corrupt file \"%s\"\n", fn);
                 printf("<corrupt> %s\n", fn);
                 printf(" stored: %s\n actual: %s\n", formatxa(s), formatxa(a));
-                needsupdate = 1;
                 havecorrupt = 1;
             }
         } else
