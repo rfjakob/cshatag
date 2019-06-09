@@ -171,15 +171,15 @@ xa_t getstoredxa(FILE* f)
 /**
  * Write out metadata to file's extended attributes
  */
-int writexa(FILE* f, xa_t xa)
+int writexa(FILE* f, const xa_t* const xa)
 {
     int fd = fileno(f);
     int flags = 0, err = 0;
 
     char buf[100];
-    snprintf(buf, sizeof(buf), "%llu.%09lu", xa.s, xa.ns);
+    snprintf(buf, sizeof(buf), "%llu.%09lu", xa->s, xa->ns);
     err = fsetxattr(fd, "user.shatag.ts", buf, strlen(buf), flags);
-    err |= fsetxattr(fd, "user.shatag.sha256", &xa.sha256, SHA256_NIBBLES, flags);
+    err |= fsetxattr(fd, "user.shatag.sha256", &xa->sha256, SHA256_NIBBLES, flags);
 
     return err;
 }
@@ -266,7 +266,7 @@ int main(int argc, const char* argv[])
         needsupdate = 1;
     }
 
-    if (needsupdate && writexa(f, a) != 0) {
+    if (needsupdate && writexa(f, &a) != 0) {
         fprintf(stderr,
             "Error: could not write extended attributes to file \"%s\": %s\n",
             fn, strerror(errno));
