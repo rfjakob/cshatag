@@ -35,7 +35,13 @@
 #ifdef __APPLE__
 #define st_mtim st_mtimespec
 #define fgetxattr(fd, name, buf, size) fgetxattr(fd, name, buf, size, 0, 0)
-#define fsetxattr(fd, name, buf, size, flags) fsetxattr(fd, name, buf, size, 0, flags)
+/*
+ * SMB or MacOS bug: when working on an SMB mounted filesystem on a Mac, it seems the call
+ * to `fsetxattr` does not update the xattr but removes it instead. So it takes two runs
+ * of `cshatag` to update the attribute.
+ * To work around this issue, we remove the xattr explicitely before setting it again.
+ */
+#define fsetxattr(fd, name, buf, size, flags) fremovexattr(fd, name, 0)|fsetxattr(fd, name, buf, size, 0, flags)
 #undef ENODATA
 #define ENODATA ENOATTR
 #endif
