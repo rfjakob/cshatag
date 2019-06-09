@@ -39,9 +39,10 @@
  * SMB or MacOS bug: when working on an SMB mounted filesystem on a Mac, it seems the call
  * to `fsetxattr` does not update the xattr but removes it instead. So it takes two runs
  * of `cshatag` to update the attribute.
- * To work around this issue, we remove the xattr explicitely before setting it again.
+ * To work around this issue, we call `fsetxattr` twice ourselves.
  */
-#define fsetxattr(fd, name, buf, size, flags) fremovexattr(fd, name, 0)|fsetxattr(fd, name, buf, size, 0, flags)
+#define fsetxattr(fd, name, buf, size, flags) fsetxattr(fd, name, buf, size, 0, flags) \
+                                              | fsetxattr(fd, name, buf, size, 0, flags)
 #undef ENODATA
 #define ENODATA ENOATTR
 #endif
