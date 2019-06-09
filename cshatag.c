@@ -32,6 +32,14 @@
 #define SHA256_BYTES 32
 #define SHA256_NIBBLES 64
 
+#ifdef __APPLE__
+#define st_mtim st_mtimespec
+#define fgetxattr(fd, name, buf, size) fgetxattr(fd, name, buf, size, 0, 0)
+#define fsetxattr(fd, name, buf, size, flags) fsetxattr(fd, name, buf, size, 0, flags)
+#undef ENODATA
+#define ENODATA ENOATTR
+#endif
+
 /**
  * Holds a file's metadata
  */
