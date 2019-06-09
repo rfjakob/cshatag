@@ -53,15 +53,13 @@ To remove the extended attributes from all files:
 
 0 Success
 .br
-1 Wrong number of arguments
+1 Invalid command-line
 .br
-2 File could not be opened
+8 Corrupt file(s) found
 .br
-3 File is not a regular file
+16 Error(s) encountered during processing
 .br
-4 Extended attributes could not be written to file
-.br
-5 File is corrupt
+24 Corrupt file(s) found AND error(s) encountered (= 8 + 16)
 
 .SH COMPATIBILITY
 

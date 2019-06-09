@@ -33,6 +33,8 @@
 #define SHA256_BYTES 32
 #define SHA256_NIBBLES 64
 
+enum { EXIT_BIT_CORRUPTIONS = 8, EXIT_BIT_ERRORS = 16 };
+
 /**
  * Holds a file's metadata
  */
@@ -292,8 +294,11 @@ int main(int argc, const char* argv[])
 
     check_file(fn, &stats);
 
+    int ret = 0;
     if (stats.corruptions > 0)
-        return 5;
-    else
-        return 0;
+        ret |= EXIT_BIT_CORRUPTIONS;
+    if (stats.errors > 0)
+        ret |= EXIT_BIT_ERRORS;
+
+    return ret;
 }

@@ -58,8 +58,28 @@ set +e
 ../cshatag foo.txt &> /dev/null
 RES=$?
 set -e
-if [[ $RES -eq 0 ]]; then
-	echo "should have returned an error code, but returned 0"
+if [[ $RES -ne 8 ]]; then
+	echo "should have returned an error code 8, but returned $RES"
+	exit 1
+fi
+
+echo "*** Non-existing file ***"
+set +e
+../cshatag non-existing-file &> /dev/null
+RES=$?
+set -e
+if [[ $RES -ne 16 ]]; then
+	echo "should have returned an error code 16, but returned $RES"
+	exit 1
+fi
+
+echo "*** Invalid command-line ***"
+set +e
+../cshatag -x -y -z foo bar baz &> /dev/null
+RES=$?
+set -e
+if [[ $RES -ne 1 ]]; then
+	echo "should have returned an error code 1, but returned $RES"
 	exit 1
 fi
 

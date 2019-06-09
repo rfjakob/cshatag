@@ -44,11 +44,10 @@ EXAMPLES
 
 RETURN VALUE
        0 Success
-       1 Wrong number of arguments
-       2 File could not be opened
-       3 File is not a regular file
-       4 Extended attributs could not be written to file
-       5 File is corrupt
+       1 Invalid command-line
+       8 Corrupt file(s) found
+       16 Error(s) encountered during processing
+       24 Corrupt file(s) found AND error(s) encountered (= 8 + 16)
 
 COMPATIBILITY
        cshatag  writes  the  user.shatag.ts field with full integer nanosecond
