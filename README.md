@@ -36,12 +36,12 @@ DESCRIPTION
 
 EXAMPLES
        Typically, cshatag will be called from find:
-       # find / -xdev -type f -exec cshatag {} \; > cshatag.log
+       # find . -xdev -type f -print0 | xargs -0 cshatag > cshatag.log
        Errors like corrupt files will then be printed to stderr  or  grep  for
        "corrupt" in cshatag.log.
 
        To remove the extended attributes from all files:
-       #  find  /  -xdev  -type f -exec setfattr -x user.shatag.ts {} \; -exec
+       #  find  .  -xdev  -type f -exec setfattr -x user.shatag.ts {} \; -exec
        setfattr -x user.shatag.sha256 {} \;
 
 RETURN VALUE
