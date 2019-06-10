@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 
 echo "*** Testing new empty file ***"
 rm -f foo.txt
-touch -t 201901010000 foo.txt
+TZ=CET touch -t 201901010000 foo.txt
 ../cshatag foo.txt > 1.out
 diff -u 1.expected 1.out
 ../cshatag foo.txt > 2.out
@@ -44,7 +44,7 @@ dd if=/dev/zero of=foo.txt bs=100 count=1 status=none
 
 echo "*** Testing cshatag v1.0 format with appended NULL byte ***"
 rm -f foo.txt
-touch -t 201901010000 foo.txt
+TZ=CET touch -t 201901010000 foo.txt
 setfattr -n user.shatag.ts -v "1546297200.000000000" foo.txt
 setfattr -n user.shatag.sha256 -v 0x6533623063343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500 foo.txt
 ../cshatag foo.txt > /dev/null
@@ -55,7 +55,7 @@ setfattr -n user.shatag.sha256 -v 0x65336230633434323938666331633134396166626634
 
 echo "*** Corrupt file ***"
 echo "123" > foo.txt
-touch -t 201901010000 foo.txt
+TZ=CET touch -t 201901010000 foo.txt
 set +e
 ../cshatag foo.txt &> /dev/null
 RES=$?
