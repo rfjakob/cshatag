@@ -1,20 +1,19 @@
 [![Build Status](https://travis-ci.org/rfjakob/cshatag.svg?branch=master)](https://travis-ci.org/rfjakob/cshatag)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/rfjakob/cshatag.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rfjakob/cshatag/alerts/)
-[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/rfjakob/cshatag.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rfjakob/cshatag/context:cpp)
 
 ```
 CSHATAG(1)                       User Manuals                       CSHATAG(1)
 
 NAME
-       cshatag - shatag in C
+       cshatag - compiled shatag
 
 SYNOPSIS
        cshatag FILE
 
 DESCRIPTION
-       cshatag is a minimal re-implementation in C of shatag
+       cshatag is a minimal and fast re-implementation of shatag
        (  https://bitbucket.org/maugier/shatag  ,  written in python by Maxime
-       Augier ).
+       Augier )
+       in a compiled language.
 
        cshatag is a tool to detect silent data corruption. It writes the mtime
        and  the sha256 checksum of a file into the file's extended attributes.
@@ -32,14 +31,17 @@ DESCRIPTION
        cshatag aims to be format-compatible with  shatag  and  uses  the  same
        extended attributes (see the COMPATIBILITY section).
 
+       cshatag  was  originally written in C but in 2019 it has been rewritten
+       in Go.
+
 EXAMPLES
        Typically, cshatag will be called from find:
        # find / -xdev -type f -exec cshatag {} \; > cshatag.log
-       Errors  like  corrupt  files will then be printed to stderr or grep for
+       Errors like corrupt files will then be printed to stderr  or  grep  for
        "corrupt" in cshatag.log.
 
        To remove the extended attributes from all files:
-       # find / -xdev -type f -exec setfattr -x  user.shatag.ts  {}  \;  -exec
+       #  find  /  -xdev  -type f -exec setfattr -x user.shatag.ts {} \; -exec
        setfattr -x user.shatag.sha256 {} \;
 
 RETURN VALUE
@@ -51,12 +53,13 @@ RETURN VALUE
        5 File is corrupt
 
 COMPATIBILITY
-       cshatag  writes  the  user.shatag.ts field with full integer nanosecond
+       cshatag writes the user.shatag.ts field with  full  integer  nanosecond
        precision, while python uses a double for the whole mtime and loses the
        last few digits.
 
 AUTHOR
-       Jakob Unterwurzacher <jakobunt@gmail.com>
+       Jakob               Unterwurzacher                <jakobunt@gmail.com>,
+       https://github.com/rfjakob/cshatag
 
 COPYRIGHT
        Copyright 2012 Jakob Unterwurzacher. License GPLv2+.

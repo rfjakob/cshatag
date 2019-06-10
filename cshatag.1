@@ -2,7 +2,7 @@
 .TH CSHATAG 1 "MAY 2012" Linux "User Manuals"
 .SH NAME
 
-cshatag \- shatag in C
+cshatag \- compiled shatag
 
 .SH SYNOPSIS
 
@@ -10,10 +10,12 @@ cshatag FILE
 
 .SH DESCRIPTION
 
-cshatag is a minimal re-implementation in C of shatag
+cshatag is a minimal and fast re-implementation of shatag
 .br
 ( https://bitbucket.org/maugier/shatag , written in python
-by Maxime Augier ).
+by Maxime Augier )
+.br
+in a compiled language.
 
 cshatag is a tool to detect silent data corruption. It writes
 the mtime and the sha256 checksum of a file into the file's
@@ -35,6 +37,9 @@ File statuses that appear on stdout are:
 
 cshatag aims to be format-compatible with shatag and uses the
 same extended attributes (see the COMPATIBILITY section).
+
+cshatag was originally written in C but
+in 2019 it has been rewritten in Go.
 
 .SH EXAMPLES
 
@@ -70,7 +75,7 @@ nanosecond precision, while python uses a double for the
 whole mtime and loses the last few digits.
 
 .SH AUTHOR
-Jakob Unterwurzacher <jakobunt@gmail.com>
+Jakob Unterwurzacher <jakobunt@gmail.com>, https://github.com/rfjakob/cshatag
 
 .SH COPYRIGHT
 Copyright 2012 Jakob Unterwurzacher. License GPLv2+.

@@ -6,5 +6,6 @@ addons:
     - attr
 
 script:
+  - go get -d -t -v ./...
   - make
   - make test
