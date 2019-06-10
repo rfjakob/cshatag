@@ -115,17 +115,22 @@ func printComparison(stored fileAttr, actual fileAttr) {
 	fmt.Printf(" stored: %s\n actual: %s\n", stored.prettyPrint(), actual.prettyPrint())
 }
 
-func main() {
-	myname := os.Args[0]
-	if len(os.Args) != 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s FILE\n", myname)
-		os.Exit(1)
-	}
-	fn := os.Args[1]
+var stats struct {
+	total      int
+	errors     int
+	inprogress int
+	corrupt    int
+	outdated   int
+	ok         int
+}
+
+func checkFile(fn string) {
+	stats.total++
 	f, err := os.Open(fn)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		os.Exit(2)
+		stats.errors++
+		return
 	}
 	defer f.Close()
 
@@ -133,24 +138,46 @@ func main() {
 	actual, err := getActualAttr(f)
 	if err == syscall.EINPROGRESS {
 		fmt.Printf("<concurrent modification> %s\n", fn)
-		os.Exit(0)
+		stats.inprogress++
+		return
 	}
 	if stored.ts == actual.ts {
 		if bytes.Equal(stored.sha256, actual.sha256) {
 			fmt.Printf("<ok> %s\n", fn)
-			os.Exit(0)
+			stats.ok++
+			return
 		}
 		fmt.Fprintf(os.Stderr, "Error: corrupt file %q\n", fn)
 		fmt.Printf("<corrupt> %s\n", fn)
 		printComparison(stored, actual)
-		os.Exit(5)
+		stats.corrupt++
+		return
 	}
 	fmt.Printf("<outdated> %s\n", fn)
 	printComparison(stored, actual)
 	err = storeAttr(f, actual)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		os.Exit(4)
+		stats.errors++
+		return
 	}
-	os.Exit(0)
+	stats.outdated++
+}
+
+func main() {
+	myname := os.Args[0]
+	if len(os.Args) < 2 {
+		fmt.Fprintf(os.Stderr, "Usage: %s FILE [FILE ...]\n", myname)
+		os.Exit(1)
+	}
+	for _, fn := range os.Args[1:] {
+		checkFile(fn)
+	}
+	if (stats.ok + stats.outdated) == stats.total {
+		os.Exit(0)
+	}
+	if stats.corrupt > 0 {
+		os.Exit(5)
+	}
+	os.Exit(2)
 }
