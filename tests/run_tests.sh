@@ -10,9 +10,11 @@ cd "$(dirname "$0")"
 
 echo "*** Testing new empty file ***"
 rm -f foo.txt
-echo > foo.txt
-../cshatag foo.txt > /dev/null
-../cshatag foo.txt > /dev/null
+touch -t 201901010000 foo.txt
+../cshatag foo.txt > 1.out
+diff -u 1.expected 1.out
+../cshatag foo.txt > 2.out
+diff -u 2.expected 2.out
 
 echo "*** Looking for NULL bytes (shouldn't find any)***"
 if getfattr -n user.shatag.sha256 foo.txt -e hex | grep 00 ; then
