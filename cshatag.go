@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -99,6 +100,15 @@ func getActualAttr(f *os.File) (attr fileAttr, err error) {
 //     user.shatag.sha256="dc9fe2260fd6748b29532be0ca2750a50f9eca82046b15497f127eba6dda90e8"
 //     user.shatag.ts="1560177334.020775051"
 func storeAttr(f *os.File, attr fileAttr) (err error) {
+	if runtime.GOOS == "darwin" {
+		// SMB or MacOS bug: when working on an SMB mounted filesystem on a Mac, it seems the call
+		// to `fsetxattr` does not update the xattr but removes it instead. So it takes two runs
+		// of `cshatag` to update the attribute.
+		// To work around this issue, we remove the xattr explicitely before setting it again.
+		// https://github.com/rfjakob/cshatag/issues/8
+		xattr.FRemove(f, xattrTs)
+		xattr.FRemove(f, xattrSha256)
+	}
 	err = xattr.FSet(f, xattrTs, []byte(attr.ts.prettyPrint()))
 	if err != nil {
 		return
