@@ -23,6 +23,7 @@ format:
 
 README.md: cshatag.1 Makefile
 	@echo '[![Build Status](https://travis-ci.org/rfjakob/cshatag.svg?branch=master)](https://travis-ci.org/rfjakob/cshatag)' > README.md
+	@echo '[![Go Report Card](https://goreportcard.com/badge/github.com/rfjakob/cshatag)](https://goreportcard.com/report/github.com/rfjakob/cshatag)' >> README.md
 	@echo '[Changelog](CHANGELOG.md)' >> README.md
 	@echo >> README.md
 	@echo '```' >> README.md
