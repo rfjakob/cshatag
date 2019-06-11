@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/rfjakob/cshatag.svg?branch=master)](https://travis-ci.org/rfjakob/cshatag)
+[Changelog](CHANGELOG.md)
 
 ```
 CSHATAG(1)                       User Manuals                       CSHATAG(1)
