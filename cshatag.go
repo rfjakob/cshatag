@@ -67,7 +67,7 @@ func getMtime(f *os.File) (ts fileTimestamp) {
 		fmt.Fprintln(os.Stderr, err)
 	}
 	if !fi.Mode().IsRegular() {
-		fmt.Println("Error: %s is not a regular file", f.Name())
+		fmt.Printf("Error: %q is not a regular file\n", f.Name())
 		os.Exit(3)
 	}
 	ts.s = uint64(fi.ModTime().Unix())
@@ -104,7 +104,7 @@ func storeAttr(f *os.File, attr fileAttr) (err error) {
 		// SMB or MacOS bug: when working on an SMB mounted filesystem on a Mac, it seems the call
 		// to `fsetxattr` does not update the xattr but removes it instead. So it takes two runs
 		// of `cshatag` to update the attribute.
-		// To work around this issue, we remove the xattr explicitely before setting it again.
+		// To work around this issue, we remove the xattr explicitly before setting it again.
 		// https://github.com/rfjakob/cshatag/issues/8
 		xattr.FRemove(f, xattrTs)
 		xattr.FRemove(f, xattrSha256)
