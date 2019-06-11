@@ -18,6 +18,8 @@ const xattrSha256 = "user.shatag.sha256"
 const xattrTs = "user.shatag.ts"
 const zeroSha256 = "0000000000000000000000000000000000000000000000000000000000000000"
 
+var GitVersion = ""
+
 type fileTimestamp struct {
 	s  uint64
 	ns uint32
@@ -175,8 +177,12 @@ func checkFile(fn string) {
 }
 
 func main() {
-	myname := os.Args[0]
+	const myname = "cshatag"
+	if GitVersion == "" {
+		GitVersion = "(version unknown)"
+	}
 	if len(os.Args) < 2 {
+		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
 		fmt.Fprintf(os.Stderr, "Usage: %s FILE [FILE ...]\n", myname)
 		os.Exit(1)
 	}

@@ -1,10 +1,11 @@
 PREFIX ?= /usr/local
+GITVERSION := $(shell git describe --dirty)
 
 .PHONY: all
 all: cshatag README.md
 
 cshatag: cshatag.go Makefile
-	CGO_ENABLED=0 go build
+	CGO_ENABLED=0 go build "-ldflags=-X main.GitVersion=${GITVERSION}"
 
 .PHONY: install
 install: cshatag
