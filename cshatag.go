@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -19,6 +21,7 @@ const xattrTs = "user.shatag.ts"
 const zeroSha256 = "0000000000000000000000000000000000000000000000000000000000000000"
 
 var GitVersion = ""
+var removeFlag bool
 
 type fileTimestamp struct {
 	s  uint64
@@ -108,8 +111,7 @@ func storeAttr(f *os.File, attr fileAttr) (err error) {
 		// of `cshatag` to update the attribute.
 		// To work around this issue, we remove the xattr explicitly before setting it again.
 		// https://github.com/rfjakob/cshatag/issues/8
-		xattr.FRemove(f, xattrTs)
-		xattr.FRemove(f, xattrSha256)
+		removeAttr(f)
 	}
 	err = xattr.FSet(f, xattrTs, []byte(attr.ts.prettyPrint()))
 	if err != nil {
@@ -117,6 +119,23 @@ func storeAttr(f *os.File, attr fileAttr) (err error) {
 	}
 	err = xattr.FSet(f, xattrSha256, attr.sha256)
 	return
+}
+
+// removeAttr removes any previously stored extended attributes. Returns an error
+// if removal of either the timestamp or checksum xattrs fails.
+func removeAttr(f *os.File) error {
+	err1 := xattr.FRemove(f, xattrTs)
+	err2 := xattr.FRemove(f, xattrSha256)
+	if err1 != nil && err2 != nil {
+		return errors.New(err1.Error() + "  " + err2.Error())
+	}
+	if err1 != nil {
+		return err1
+	}
+	if err2 != nil {
+		return err2
+	}
+	return nil
 }
 
 // printComparison prints something like this:
@@ -145,6 +164,17 @@ func checkFile(fn string) {
 		return
 	}
 	defer f.Close()
+
+	if removeFlag {
+		if err = removeAttr(f); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+			stats.errors++
+			return
+		}
+		fmt.Printf("<removed xattr> %s\n", fn)
+		stats.ok++
+		return
+	}
 
 	stored, _ := getStoredAttr(f)
 	actual, err := getActualAttr(f)
@@ -178,15 +208,26 @@ func checkFile(fn string) {
 
 func main() {
 	const myname = "cshatag"
+
 	if GitVersion == "" {
 		GitVersion = "(version unknown)"
 	}
-	if len(os.Args) < 2 {
+
+	flag.BoolVar(&removeFlag, "remove", false, "Remove any previously stored extended attributes.")
+	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
-		fmt.Fprintf(os.Stderr, "Usage: %s FILE [FILE ...]\n", myname)
+		fmt.Fprintf(os.Stderr, "Usage: %s [OPTION] FILE [FILE ...]\n", myname)
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	for _, fn := range os.Args[1:] {
+	flag.Parse()
+
+	if flag.NArg() == 0 {
+		flag.Usage()
+	}
+
+	for _, fn := range flag.Args() {
 		checkFile(fn)
 	}
 	if (stats.ok + stats.outdated) == stats.total {
