@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -19,6 +20,7 @@ const xattrTs = "user.shatag.ts"
 const zeroSha256 = "0000000000000000000000000000000000000000000000000000000000000000"
 
 var GitVersion = ""
+var ntfsFlag bool
 
 type fileTimestamp struct {
 	s  uint64
@@ -127,6 +129,17 @@ func printComparison(stored fileAttr, actual fileAttr) {
 	fmt.Printf(" stored: %s\n actual: %s\n", stored.prettyPrint(), actual.prettyPrint())
 }
 
+// On an NTFS file system the mtime resolution is 100ns which can cause a
+// discrepancy between stored and acutal time stamps. For example, if a file
+// with an xattr stored time stamp is copied from an ext4 file system. Passing
+// the flag -ntfs causes this discrepancy to be ignored.
+func equivalentTimestamps(storedTs, actualTs fileTimestamp) bool {
+	if ntfsFlag {
+		return storedTs.s == actualTs.s && storedTs.ns-actualTs.ns < 100
+	}
+	return storedTs == actualTs
+}
+
 var stats struct {
 	total      int
 	errors     int
@@ -153,7 +166,7 @@ func checkFile(fn string) {
 		stats.inprogress++
 		return
 	}
-	if stored.ts == actual.ts {
+	if equivalentTimestamps(stored.ts, actual.ts) {
 		if bytes.Equal(stored.sha256, actual.sha256) {
 			fmt.Printf("<ok> %s\n", fn)
 			stats.ok++
@@ -178,15 +191,27 @@ func checkFile(fn string) {
 
 func main() {
 	const myname = "cshatag"
+
 	if GitVersion == "" {
 		GitVersion = "(version unknown)"
 	}
-	if len(os.Args) < 2 {
+
+	flag.BoolVar(&ntfsFlag, "ntfs", false, "Allow timestamp discrepancy of "+
+		"up to 100ns for maximum compatibility with NTFS filesystems.")
+	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
-		fmt.Fprintf(os.Stderr, "Usage: %s FILE [FILE ...]\n", myname)
+		fmt.Fprintf(os.Stderr, "Usage: %s [OPTION] FILE [FILE ...]\n", myname)
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	for _, fn := range os.Args[1:] {
+	flag.Parse()
+
+	if flag.NArg() == 0 {
+		flag.Usage()
+	}
+
+	for _, fn := range flag.Args() {
 		checkFile(fn)
 	}
 	if (stats.ok + stats.outdated) == stats.total {
