@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -20,7 +21,7 @@ const xattrTs = "user.shatag.ts"
 const zeroSha256 = "0000000000000000000000000000000000000000000000000000000000000000"
 
 var GitVersion = ""
-var ntfsFlag bool
+var removeFlag bool
 
 type fileTimestamp struct {
 	s  uint64
@@ -110,8 +111,7 @@ func storeAttr(f *os.File, attr fileAttr) (err error) {
 		// of `cshatag` to update the attribute.
 		// To work around this issue, we remove the xattr explicitly before setting it again.
 		// https://github.com/rfjakob/cshatag/issues/8
-		xattr.FRemove(f, xattrTs)
-		xattr.FRemove(f, xattrSha256)
+		removeAttr(f)
 	}
 	err = xattr.FSet(f, xattrTs, []byte(attr.ts.prettyPrint()))
 	if err != nil {
@@ -121,23 +121,29 @@ func storeAttr(f *os.File, attr fileAttr) (err error) {
 	return
 }
 
+// removeAttr removes any previously stored extended attributes. Returns an error
+// if removal of either the timestamp or checksum xattrs fails.
+func removeAttr(f *os.File) error {
+	err1 := xattr.FRemove(f, xattrTs)
+	err2 := xattr.FRemove(f, xattrSha256)
+	if err1 != nil && err2 != nil {
+		return errors.New(err1.Error() + "  " + err2.Error())
+	}
+	if err1 != nil {
+		return err1
+	}
+	if err2 != nil {
+		return err2
+	}
+	return nil
+}
+
 // printComparison prints something like this:
 //
 //     stored: faa28bfa6332264571f28b4131b0673f0d55a31a2ccf5c873c435c235647bf76 1560177189.769244818
 //     actual: dc9fe2260fd6748b29532be0ca2750a50f9eca82046b15497f127eba6dda90e8 1560177334.020775051
 func printComparison(stored fileAttr, actual fileAttr) {
 	fmt.Printf(" stored: %s\n actual: %s\n", stored.prettyPrint(), actual.prettyPrint())
-}
-
-// On an NTFS file system the mtime resolution is 100ns which can cause a
-// discrepancy between stored and acutal time stamps. For example, if a file
-// with an xattr stored time stamp is copied from an ext4 file system. Passing
-// the flag -ntfs causes this discrepancy to be ignored.
-func equivalentTimestamps(storedTs, actualTs fileTimestamp) bool {
-	if ntfsFlag {
-		return storedTs.s == actualTs.s && storedTs.ns-actualTs.ns < 100
-	}
-	return storedTs == actualTs
 }
 
 var stats struct {
@@ -159,6 +165,17 @@ func checkFile(fn string) {
 	}
 	defer f.Close()
 
+	if removeFlag {
+		if err = removeAttr(f); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+			stats.errors++
+			return
+		}
+		fmt.Printf("<removed xattr> %s\n", fn)
+		stats.ok++
+		return
+	}
+
 	stored, _ := getStoredAttr(f)
 	actual, err := getActualAttr(f)
 	if err == syscall.EINPROGRESS {
@@ -166,7 +183,7 @@ func checkFile(fn string) {
 		stats.inprogress++
 		return
 	}
-	if equivalentTimestamps(stored.ts, actual.ts) {
+	if stored.ts == actual.ts {
 		if bytes.Equal(stored.sha256, actual.sha256) {
 			fmt.Printf("<ok> %s\n", fn)
 			stats.ok++
@@ -196,8 +213,7 @@ func main() {
 		GitVersion = "(version unknown)"
 	}
 
-	flag.BoolVar(&ntfsFlag, "ntfs", false, "Allow timestamp discrepancy of "+
-		"up to 100ns for maximum compatibility with NTFS filesystems.")
+	flag.BoolVar(&removeFlag, "remove", false, "Remove any previously stored extended attributes.")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTION] FILE [FILE ...]\n", myname)
