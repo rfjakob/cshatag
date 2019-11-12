@@ -65,4 +65,21 @@ if [[ $RES -eq 0 ]]; then
 	exit 1
 fi
 
+echo "*** Testing removal of extended attributes ***"
+rm -f foo.txt
+TZ=CET touch -t 201901010000 foo.txt
+../cshatag foo.txt > 1.out
+diff -u 1.expected 1.out
+../cshatag --remove foo.txt > 3.out
+diff -u 3.expected 3.out
+set +e
+../cshatag --remove foo.txt 2> 4.err
+RES=$?
+set -e
+if [[ $RES -eq 0 ]]; then
+	echo "should have returned an error code, but returned 0"
+	exit 1
+fi
+diff -u 4.expected 4.err
+
 echo "*** ALL TESTS PASSED ***"
