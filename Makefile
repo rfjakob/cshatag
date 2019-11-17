@@ -4,7 +4,7 @@ GITVERSION := $(shell git describe --dirty)
 .PHONY: all
 all: cshatag README.md
 
-cshatag: cshatag.go Makefile
+cshatag: *.go Makefile
 	CGO_ENABLED=0 go build "-ldflags=-X main.GitVersion=${GITVERSION}"
 
 .PHONY: install

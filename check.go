@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -19,9 +18,6 @@ import (
 const xattrSha256 = "user.shatag.sha256"
 const xattrTs = "user.shatag.ts"
 const zeroSha256 = "0000000000000000000000000000000000000000000000000000000000000000"
-
-var GitVersion = ""
-var removeFlag bool
 
 type fileTimestamp struct {
 	s  uint64
@@ -146,16 +142,6 @@ func printComparison(stored fileAttr, actual fileAttr) {
 	fmt.Printf(" stored: %s\n actual: %s\n", stored.prettyPrint(), actual.prettyPrint())
 }
 
-var stats struct {
-	total      int
-	errors     int
-	inprogress int
-	corrupt    int
-	timechange int
-	outdated   int
-	ok         int
-}
-
 func checkFile(fn string) {
 	stats.total++
 	f, err := os.Open(fn)
@@ -208,37 +194,4 @@ func checkFile(fn string) {
 		stats.errors++
 		return
 	}
-}
-
-func main() {
-	const myname = "cshatag"
-
-	if GitVersion == "" {
-		GitVersion = "(version unknown)"
-	}
-
-	flag.BoolVar(&removeFlag, "remove", false, "Remove any previously stored extended attributes.")
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
-		fmt.Fprintf(os.Stderr, "Usage: %s [OPTION] FILE [FILE ...]\n", myname)
-		fmt.Fprintf(os.Stderr, "Options:\n")
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-	flag.Parse()
-
-	if flag.NArg() == 0 {
-		flag.Usage()
-	}
-
-	for _, fn := range flag.Args() {
-		checkFile(fn)
-	}
-	if (stats.ok + stats.outdated + stats.timechange) == stats.total {
-		os.Exit(0)
-	}
-	if stats.corrupt > 0 {
-		os.Exit(5)
-	}
-	os.Exit(2)
 }
