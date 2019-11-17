@@ -1,10 +1,10 @@
 *Short changelog - for all the details look at the git log.*
 
 vNEXT, in progress
+* Add `-remove` flag
+* Add `-q` and `-qq` flags
 * Rewrite cshatag in Go and add MacOS support
 * Accept multiple files per invocation to improve performance
-* Do not update the hash on corrupt files
-  ([#9](https://github.com/rfjakob/cshatag/pull/9))
 * Work around problems on MacOS SMB mounts
   ([#11](https://github.com/rfjakob/cshatag/pull/11))
 

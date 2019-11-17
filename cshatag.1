@@ -6,7 +6,7 @@ cshatag \- compiled shatag
 
 .SH SYNOPSIS
 
-cshatag FILE
+cshatag [OPTIONS] FILE [FILE...]
 
 .SH DESCRIPTION
 
@@ -29,17 +29,27 @@ and the stored checksum is updated.
 
 File statuses that appear on stdout are:
 .br
-	outdated    mtime has changed
+	<outdated>    both mtime and checksum have changed
 .br
-	ok          mtime has not changed, checksum is correct
+	<ok>          both checksum and mtime stayed the same
 .br
-	corrupt     mtime has not changed, checksum is wrong
+	<timechange>  only mtime has changed, checksum stayed the same
+.br
+	<corrupt>     mtime stayed the same but checksum changed
 
 cshatag aims to be format-compatible with shatag and uses the
 same extended attributes (see the COMPATIBILITY section).
 
 cshatag was written in C in 2012 and has been
 rewritten in Go in 2019.
+
+.SH OPTIONS
+
+-remove  remove cshatag's xattrs from FILE
+.br
+-q       quiet mode - don't report <ok> files
+.br
+-qq      quiet2 mode - only report <corrupt> files and errors
 
 .SH EXAMPLES
 
@@ -52,7 +62,7 @@ or grep for "corrupt" in cshatag.log.
 
 To remove the extended attributes from all files:
 .br
-# find . -xdev -type f -exec setfattr -x user.shatag.ts {} \\; -exec setfattr -x user.shatag.sha256 {} \\;
+# find . -xdev -type f -print0 | xargs -0 cshatag -remove
 
 .SH "RETURN VALUE"
 

@@ -20,6 +20,8 @@ var stats struct {
 
 var args struct {
 	remove bool
+	q      bool
+	qq     bool
 }
 
 func main() {
@@ -30,6 +32,8 @@ func main() {
 	}
 
 	flag.BoolVar(&args.remove, "remove", false, "Remove any previously stored extended attributes.")
+	flag.BoolVar(&args.q, "q", false, "quiet: don't print <ok> files")
+	flag.BoolVar(&args.qq, "qq", false, "quiet²: Only print <corrupt> files and errors")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTION] FILE [FILE ...]\n", myname)
@@ -38,9 +42,12 @@ func main() {
 		os.Exit(1)
 	}
 	flag.Parse()
-
 	if flag.NArg() == 0 {
 		flag.Usage()
+	}
+	if args.qq {
+		// quiet2 implies quiet
+		args.q = true
 	}
 
 	for _, fn := range flag.Args() {

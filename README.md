@@ -9,7 +9,7 @@ NAME
        cshatag - compiled shatag
 
 SYNOPSIS
-       cshatag FILE
+       cshatag [OPTIONS] FILE [FILE2...]
 
 DESCRIPTION
        cshatag is a minimal and fast re-implementation of shatag
@@ -26,14 +26,20 @@ DESCRIPTION
        stdout and the stored checksum is updated.
 
        File statuses that appear on stdout are:
-            outdated    mtime has changed
-            ok          mtime has not changed, checksum is correct
-            corrupt     mtime has not changed, checksum is wrong
+            <outdated>    both mtime and checksum have changed
+            <ok>          both checksum and mtime stayed the same
+            <timechange>  only mtime has changed, checksum stayed the same
+            <corrupt>     mtime stayed the same but checksum changed
 
        cshatag aims to be format-compatible with  shatag  and  uses  the  same
        extended attributes (see the COMPATIBILITY section).
 
        cshatag was written in C in 2012 and has been rewritten in Go in 2019.
+
+OPTIONS
+       -remove  remove cshatag's xattrs from FILE
+       -q       quiet mode - don't report <ok> files
+       -qq      quiet2 mode - only report <corrupt> files and errors
 
 EXAMPLES
        Typically, cshatag will be called from find:
@@ -42,8 +48,7 @@ EXAMPLES
        "corrupt" in cshatag.log.
 
        To remove the extended attributes from all files:
-       # find . -xdev -type f -exec setfattr -x  user.shatag.ts  {}  \;  -exec
-       setfattr -x user.shatag.sha256 {} \;
+       # find . -xdev -type f -print0 | xargs -0 cshatag -remove
 
 RETURN VALUE
        0 Success
@@ -54,12 +59,12 @@ RETURN VALUE
        5 File is corrupt
 
 COMPATIBILITY
-       cshatag  writes  the  user.shatag.ts field with full integer nanosecond
+       cshatag writes the user.shatag.ts field with  full  integer  nanosecond
        precision, while python uses a double for the whole mtime and loses the
        last few digits.
 
 AUTHOR
-       Jakob                Unterwurzacher               <jakobunt@gmail.com>,
+       Jakob               Unterwurzacher                <jakobunt@gmail.com>,
        https://github.com/rfjakob/cshatag
 
 COPYRIGHT

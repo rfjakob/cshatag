@@ -158,7 +158,9 @@ func checkFile(fn string) {
 			stats.errors++
 			return
 		}
-		fmt.Printf("<removed xattr> %s\n", fn)
+		if !args.q {
+			fmt.Printf("<removed xattr> %s\n", fn)
+		}
 		stats.ok++
 		return
 	}
@@ -166,13 +168,17 @@ func checkFile(fn string) {
 	stored, _ := getStoredAttr(f)
 	actual, err := getActualAttr(f)
 	if err == syscall.EINPROGRESS {
-		fmt.Printf("<concurrent modification> %s\n", fn)
+		if !args.qq {
+			fmt.Printf("<concurrent modification> %s\n", fn)
+		}
 		stats.inprogress++
 		return
 	}
 	if stored.ts == actual.ts {
 		if bytes.Equal(stored.sha256, actual.sha256) {
-			fmt.Printf("<ok> %s\n", fn)
+			if !args.q {
+				fmt.Printf("<ok> %s\n", fn)
+			}
 			stats.ok++
 			return
 		}
@@ -180,11 +186,15 @@ func checkFile(fn string) {
 		fmt.Printf("<corrupt> %s\n", fn)
 		stats.corrupt++
 	} else if bytes.Equal(stored.sha256, actual.sha256) {
-		fmt.Printf("<timechange> %s\n", fn)
+		if !args.qq {
+			fmt.Printf("<timechange> %s\n", fn)
+		}
 		stats.timechange++
 	} else {
 		// timestamp is outdated
-		fmt.Printf("<outdated> %s\n", fn)
+		if !args.qq {
+			fmt.Printf("<outdated> %s\n", fn)
+		}
 		stats.outdated++
 	}
 	printComparison(stored, actual)
