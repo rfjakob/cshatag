@@ -191,11 +191,12 @@ func checkFile(fn string) {
 		}
 		fmt.Fprintf(os.Stderr, "Error: corrupt file %q\n", fn)
 		fmt.Printf("<corrupt> %s\n", fn)
-		printComparison(stored, actual)
 		stats.corrupt++
-		return
+	} else {
+		// timestamp is outdated
+		fmt.Printf("<outdated> %s\n", fn)
+		stats.outdated++
 	}
-	fmt.Printf("<outdated> %s\n", fn)
 	printComparison(stored, actual)
 	err = storeAttr(f, actual)
 	if err != nil {
@@ -203,7 +204,6 @@ func checkFile(fn string) {
 		stats.errors++
 		return
 	}
-	stats.outdated++
 }
 
 func main() {

@@ -62,7 +62,7 @@ echo "*** Testing shatag / cshatag v1.1 format without NULL byte ***"
 setfattr -n user.shatag.sha256 -v 0x65336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535 foo.txt
 ../cshatag foo.txt > /dev/null
 
-echo "*** Corrupt file ***"
+echo "*** Corrupt file should be flagged ***"
 echo "123" > foo.txt
 TZ=CET touch -t 201901010000 foo.txt
 set +e
@@ -73,6 +73,9 @@ if [[ $RES -eq 0 ]]; then
 	echo "should have returned an error code, but returned 0"
 	exit 1
 fi
+
+echo "*** Corrupt file should look ok on 2nd run ***"
+../cshatag foo.txt &> /dev/null
 
 echo "*** Testing removal of extended attributes ***"
 rm -f foo.txt
