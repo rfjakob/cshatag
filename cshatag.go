@@ -151,6 +151,7 @@ var stats struct {
 	errors     int
 	inprogress int
 	corrupt    int
+	timechange int
 	outdated   int
 	ok         int
 }
@@ -192,6 +193,9 @@ func checkFile(fn string) {
 		fmt.Fprintf(os.Stderr, "Error: corrupt file %q\n", fn)
 		fmt.Printf("<corrupt> %s\n", fn)
 		stats.corrupt++
+	} else if bytes.Equal(stored.sha256, actual.sha256) {
+		fmt.Printf("<timechange> %s\n", fn)
+		stats.timechange++
 	} else {
 		// timestamp is outdated
 		fmt.Printf("<outdated> %s\n", fn)
@@ -230,7 +234,7 @@ func main() {
 	for _, fn := range flag.Args() {
 		checkFile(fn)
 	}
-	if (stats.ok + stats.outdated) == stats.total {
+	if (stats.ok + stats.outdated + stats.timechange) == stats.total {
 		os.Exit(0)
 	}
 	if stats.corrupt > 0 {

@@ -94,4 +94,12 @@ if [[ $RES -eq 0 ]]; then
 fi
 diff -u 4.expected 4.err
 
+echo "*** Testing timechange ***"
+echo same > foo.txt
+TZ=CET touch -t 201901010000 foo.txt
+../cshatag foo.txt > /dev/null
+TZ=CET touch -t 201901010001 foo.txt
+../cshatag foo.txt > 5.out
+diff -u 5.expected 5.out
+
 echo "*** ALL TESTS PASSED ***"
