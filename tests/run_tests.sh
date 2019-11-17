@@ -2,6 +2,15 @@
 
 set -eu
 
+function cleanup {
+	RES=$?
+	if [[ $RES -ne 0 ]]; then
+		echo "*** FAILED WITH CODE $RES ***"
+	fi
+}
+
+trap cleanup EXIT
+
 # Check that we have getfattr / setfattr
 getfattr --version > /dev/null
 setfattr --version > /dev/null
