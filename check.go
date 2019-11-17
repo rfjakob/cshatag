@@ -152,7 +152,7 @@ func checkFile(fn string) {
 	}
 	defer f.Close()
 
-	if removeFlag {
+	if args.remove {
 		if err = removeAttr(f); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 			stats.errors++

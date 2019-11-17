@@ -7,7 +7,6 @@ import (
 )
 
 var GitVersion = ""
-var removeFlag bool
 
 var stats struct {
 	total      int
@@ -19,6 +18,10 @@ var stats struct {
 	ok         int
 }
 
+var args struct {
+	remove bool
+}
+
 func main() {
 	const myname = "cshatag"
 
@@ -26,7 +29,7 @@ func main() {
 		GitVersion = "(version unknown)"
 	}
 
-	flag.BoolVar(&removeFlag, "remove", false, "Remove any previously stored extended attributes.")
+	flag.BoolVar(&args.remove, "remove", false, "Remove any previously stored extended attributes.")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTION] FILE [FILE ...]\n", myname)
