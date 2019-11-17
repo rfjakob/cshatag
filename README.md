@@ -33,17 +33,16 @@ DESCRIPTION
        cshatag aims to be format-compatible with  shatag  and  uses  the  same
        extended attributes (see the COMPATIBILITY section).
 
-       cshatag  was  originally written in C but in 2019 it has been rewritten
-       in Go.
+       cshatag was written in C in 2012 and has been rewritten in Go in 2019.
 
 EXAMPLES
        Typically, cshatag will be called from find:
        # find . -xdev -type f -print0 | xargs -0 cshatag > cshatag.log
-       Errors like corrupt files will then be printed to stderr  or  grep  for
+       Errors  like  corrupt  files will then be printed to stderr or grep for
        "corrupt" in cshatag.log.
 
        To remove the extended attributes from all files:
-       #  find  .  -xdev  -type f -exec setfattr -x user.shatag.ts {} \; -exec
+       # find . -xdev -type f -exec setfattr -x  user.shatag.ts  {}  \;  -exec
        setfattr -x user.shatag.sha256 {} \;
 
 RETURN VALUE
@@ -55,16 +54,16 @@ RETURN VALUE
        5 File is corrupt
 
 COMPATIBILITY
-       cshatag writes the user.shatag.ts field with  full  integer  nanosecond
+       cshatag  writes  the  user.shatag.ts field with full integer nanosecond
        precision, while python uses a double for the whole mtime and loses the
        last few digits.
 
 AUTHOR
-       Jakob               Unterwurzacher                <jakobunt@gmail.com>,
+       Jakob                Unterwurzacher               <jakobunt@gmail.com>,
        https://github.com/rfjakob/cshatag
 
 COPYRIGHT
-       Copyright 2012 Jakob Unterwurzacher. License GPLv2+.
+       Copyright 2012 Jakob Unterwurzacher. MIT License.
 
 SEE ALSO
        shatag(1), sha256sum(1), getfattr(1), setfattr(1)
