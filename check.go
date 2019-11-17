@@ -197,7 +197,9 @@ func checkFile(fn string) {
 		}
 		stats.outdated++
 	}
-	printComparison(stored, actual)
+	if !args.qq {
+		printComparison(stored, actual)
+	}
 	err = storeAttr(f, actual)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
