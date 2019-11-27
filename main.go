@@ -32,10 +32,12 @@ var args struct {
 func walkFn(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error accessing %q: %v\n", path, err)
+		stats.errors++
 	} else if info.Mode().IsRegular() {
 		checkFile(path)
 	} else if !info.IsDir() {
 		fmt.Fprintf(os.Stderr, "Error: %q is not a regular file.\n", path)
+		stats.errors++
 	}
 	return nil
 }
@@ -47,6 +49,7 @@ func processDir(fn string) {
 	files, err := ioutil.ReadDir(fn)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error processing directory %q: %v\n", fn, err)
+		stats.errors++
 		return
 	}
 	for _, file := range files {
@@ -55,6 +58,7 @@ func processDir(fn string) {
 				checkFile(filepath.Join(fn, file.Name()))
 			} else {
 				fmt.Fprintf(os.Stderr, "Error: %q is not a regular file.\n", file.Name())
+				stats.errors++
 			}
 		}
 	}
@@ -67,6 +71,7 @@ func processArg(fn string) {
 	fi, err := os.Lstat(fn) // Using Lstat to be consistent with filepath.Walk for symbolic links.
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		stats.errors++
 	} else if fi.Mode().IsRegular() {
 		checkFile(fn)
 	} else if fi.IsDir() {
@@ -77,6 +82,7 @@ func processArg(fn string) {
 		}
 	} else {
 		fmt.Fprintf(os.Stderr, "Error: %q is not a regular file.\n", fn)
+		stats.errors++
 	}
 }
 
@@ -111,11 +117,15 @@ func main() {
 	for _, fn := range flag.Args() {
 		processArg(fn)
 	}
+
+	if stats.corrupt > 0 {
+		os.Exit(3)
+	}
+	if stats.errors > 0 {
+		os.Exit(2)
+	}
 	if (stats.ok + stats.outdated + stats.timechange) == stats.total {
 		os.Exit(0)
-	}
-	if stats.corrupt > 0 {
-		os.Exit(5)
 	}
 	os.Exit(2)
 }

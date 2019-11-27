@@ -62,14 +62,10 @@ func getStoredAttr(f *os.File) (attr fileAttr, err error) {
 }
 
 // getMtime reads the actual modification time of file "f" from disk.
-func getMtime(f *os.File) (ts fileTimestamp) {
+func getMtime(f *os.File) (ts fileTimestamp, err error) {
 	fi, err := f.Stat()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
-	if !fi.Mode().IsRegular() {
-		fmt.Printf("Error: %q is not a regular file\n", f.Name())
-		os.Exit(3)
+		return
 	}
 	ts.s = uint64(fi.ModTime().Unix())
 	ts.ns = uint32(fi.ModTime().Nanosecond())
@@ -79,15 +75,19 @@ func getMtime(f *os.File) (ts fileTimestamp) {
 // getActualAttr reads the actual modification time and hashes the file content.
 func getActualAttr(f *os.File) (attr fileAttr, err error) {
 	attr.sha256 = []byte(zeroSha256)
-	attr.ts = getMtime(f)
+	attr.ts, err = getMtime(f)
+	if err != nil {
+		return attr, err
+	}
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
-		fmt.Println(err)
-		os.Exit(2)
+		return attr, err
 	}
 	// Check if the file was modified while we were computing the hash
-	ts2 := getMtime(f)
-	if attr.ts != ts2 {
+	ts2, err := getMtime(f)
+	if err != nil {
+		return attr, err
+	} else if attr.ts != ts2 {
 		return attr, syscall.EINPROGRESS
 	}
 	attr.sha256 = []byte(fmt.Sprintf("%x", h.Sum(nil)))
@@ -173,7 +173,12 @@ func checkFile(fn string) {
 		}
 		stats.inprogress++
 		return
+	} else if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		stats.errors++
+		return
 	}
+
 	if stored.ts == actual.ts {
 		if bytes.Equal(stored.sha256, actual.sha256) {
 			if !args.q {
