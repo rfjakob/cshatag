@@ -147,7 +147,7 @@ func checkFile(fn string) {
 	f, err := os.Open(fn)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		stats.errors++
+		stats.errorsOpening++
 		return
 	}
 	defer f.Close()
@@ -155,7 +155,7 @@ func checkFile(fn string) {
 	if args.remove {
 		if err = removeAttr(f); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-			stats.errors++
+			stats.errorsOther++
 			return
 		}
 		if !args.q {
@@ -175,7 +175,7 @@ func checkFile(fn string) {
 		return
 	} else if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		stats.errors++
+		stats.errorsOther++
 		return
 	}
 
@@ -208,7 +208,7 @@ func checkFile(fn string) {
 	err = storeAttr(f, actual)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		stats.errors++
+		stats.errorsWritingXattr++
 		return
 	}
 }

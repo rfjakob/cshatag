@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -11,13 +10,16 @@ import (
 var GitVersion = ""
 
 var stats struct {
-	total      int
-	errors     int
-	inprogress int
-	corrupt    int
-	timechange int
-	outdated   int
-	ok         int
+	total              int
+	errorsNotRegular   int
+	errorsOpening      int
+	errorsWritingXattr int
+	errorsOther        int
+	inprogress         int
+	corrupt            int
+	timechange         int
+	outdated           int
+	ok                 int
 }
 
 var args struct {
@@ -32,57 +34,36 @@ var args struct {
 func walkFn(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error accessing %q: %v\n", path, err)
-		stats.errors++
+		stats.errorsOpening++
 	} else if info.Mode().IsRegular() {
 		checkFile(path)
 	} else if !info.IsDir() {
 		fmt.Fprintf(os.Stderr, "Error: %q is not a regular file.\n", path)
-		stats.errors++
+		stats.errorsNotRegular++
 	}
 	return nil
 }
 
-// processDir will read the contents of the directory named "fn" and for each regular file found
-// within, call `checkFile`. This function is used when a directory is passed as a command-line
-// argument but the `--recursive` flag is not set.
-func processDir(fn string) {
-	files, err := ioutil.ReadDir(fn)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error processing directory %q: %v\n", fn, err)
-		stats.errors++
-		return
-	}
-	for _, file := range files {
-		if !file.IsDir() {
-			if file.Mode().IsRegular() {
-				checkFile(filepath.Join(fn, file.Name()))
-			} else {
-				fmt.Fprintf(os.Stderr, "Error: %q is not a regular file.\n", file.Name())
-				stats.errors++
-			}
-		}
-	}
-}
-
 // processArg is called for each command-line argument given. For regular files it will call
-// `checkFile`. For directories the behaviour depends on whether the `--recursive` flag is set.
+// `checkFile`. Directories will be processed recursively provided the `--recursive` flag is set.
 // Symbolic links are not followed.
 func processArg(fn string) {
 	fi, err := os.Lstat(fn) // Using Lstat to be consistent with filepath.Walk for symbolic links.
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		stats.errors++
+		stats.errorsOther++
 	} else if fi.Mode().IsRegular() {
 		checkFile(fn)
 	} else if fi.IsDir() {
 		if args.recursive {
 			filepath.Walk(fn, walkFn)
 		} else {
-			processDir(fn)
+			fmt.Fprintf(os.Stderr, "Error: %q is a directory, did you mean to use the '-recursive' option?\n", fn)
+			stats.errorsNotRegular++
 		}
 	} else {
 		fmt.Fprintf(os.Stderr, "Error: %q is not a regular file.\n", fn)
-		stats.errors++
+		stats.errorsNotRegular++
 	}
 }
 
@@ -119,13 +100,23 @@ func main() {
 	}
 
 	if stats.corrupt > 0 {
-		os.Exit(3)
+		os.Exit(5)
 	}
-	if stats.errors > 0 {
-		os.Exit(2)
+
+	totalErrors := stats.errorsOpening + stats.errorsNotRegular + stats.errorsWritingXattr +
+		stats.errorsOther
+	if totalErrors > 0 {
+		if stats.errorsOpening == totalErrors {
+			os.Exit(2)
+		} else if stats.errorsNotRegular == totalErrors {
+			os.Exit(3)
+		} else if stats.errorsWritingXattr == totalErrors {
+			os.Exit(4)
+		}
+		os.Exit(6)
 	}
 	if (stats.ok + stats.outdated + stats.timechange) == stats.total {
 		os.Exit(0)
 	}
-	os.Exit(2)
+	os.Exit(6)
 }

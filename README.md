@@ -58,8 +58,11 @@ EXAMPLES
 RETURN VALUE
        0 Success
        1 Wrong number of arguments
-       2 An error occurred whilst attempting to process a file
-       3 At least one file was found to be corrupt
+       2 One or more files could not be opened
+       3 One or more files is not a regular file
+       4 Extended attributes could not be written to one or more files
+       5 At least one file was found to be corrupt
+       6 More than one type of error occurred
 
 COMPATIBILITY
        cshatag  writes  the  user.shatag.ts field with full integer nanosecond

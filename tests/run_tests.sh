@@ -123,4 +123,21 @@ TZ=CET touch -t 201901010001 foo.txt
 ../cshatag foo.txt > 5.out
 diff -u 5.expected 5.out
 
+echo "*** Testing recursive flag ***"
+rm -rf foo
+mkdir foo
+TZ=CET touch -t 201901010000 foo/foo.txt
+set +e
+../cshatag foo 2> 6.err
+RES=$?
+set -e
+if [[ $RES -ne 3 ]]; then
+	echo "should have returned error code 3"
+	exit 1
+fi
+diff -u 6.expected 6.err
+../cshatag --recursive foo > 7.out
+diff -u 7.expected 7.out
+rm -rf foo
+
 echo "*** ALL TESTS PASSED ***"
