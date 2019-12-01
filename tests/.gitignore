@@ -1,3 +1,4 @@
 foo.txt
 *.out
 *.err
+symlink1

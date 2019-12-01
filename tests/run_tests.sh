@@ -94,6 +94,27 @@ if [[ $RES -eq 0 ]]; then
 fi
 diff -u 4.expected 4.err
 
+echo "*** Testing nonexisting file ***"
+set +e
+../cshatag nonexisting.txt &> /dev/null
+RES=$?
+set -e
+if [[ $RES -ne 2 ]]; then
+	echo "should have returned an error code 2, but returned $RES"
+	exit 1
+fi
+
+echo "*** Testing symlink ***"
+ln -s / symlink1
+set +e
+../cshatag symlink1 &> /dev/null
+RES=$?
+set -e
+if [[ $RES -ne 3 ]]; then
+	echo "should have returned an error code 3, but returned $RES"
+	exit 1
+fi
+
 echo "*** Testing timechange ***"
 echo same > foo.txt
 TZ=CET touch -t 201901010000 foo.txt
