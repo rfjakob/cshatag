@@ -45,24 +45,26 @@ rewritten in Go in 2019.
 
 .SH OPTIONS
 
--remove  remove cshatag's xattrs from FILE
+-recursive  recursively process the contents of directories
 .br
--q       quiet mode - don't report <ok> files
+-remove     remove cshatag's xattrs from FILE
 .br
--qq      quiet2 mode - only report <corrupt> files and errors
+-q          quiet mode - don't report <ok> files
+.br
+-qq         quiet2 mode - only report <corrupt> files and errors
 
 .SH EXAMPLES
 
-Typically, cshatag will be called from find:
+Check all regular files in the file tree below the current working directory:
 .br
-# find . -xdev -type f -print0 | xargs -0 cshatag > cshatag.log
+# cshatag -recursive . > cshatag.log
 .br
 Errors like corrupt files will then be printed to stderr
 or grep for "corrupt" in cshatag.log.
 
 To remove the extended attributes from all files:
 .br
-# find . -xdev -type f -print0 | xargs -0 cshatag -remove
+# cshatag -recursive -remove .
 
 .SH "RETURN VALUE"
 
@@ -70,13 +72,15 @@ To remove the extended attributes from all files:
 .br
 1 Wrong number of arguments
 .br
-2 File could not be opened
+2 One or more files could not be opened
 .br
-3 File is not a regular file
+3 One or more files is not a regular file
 .br
-4 Extended attributs could not be written to file
+4 Extended attributes could not be written to one or more files
 .br
-5 File is corrupt
+5 At least one file was found to be corrupt
+.br
+6 More than one type of error occurred
 
 .SH COMPATIBILITY
 
@@ -92,5 +96,3 @@ Copyright 2012 Jakob Unterwurzacher. MIT License.
 
 .SH "SEE ALSO"
 shatag(1), sha256sum(1), getfattr(1), setfattr(1)
-
-
