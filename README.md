@@ -43,14 +43,11 @@ OPTIONS
        -qq         quiet2 mode - only report <corrupt> files and errors
 
 EXAMPLES
-       Check the regular files in the current working directory:
-       # cshatag . > cshatag.log
-       Errors  like  corrupt  files will then be printed to stderr or grep for
-       "corrupt" in cshatag.log.
-
-       Check all regular files in the file tree below the current working  di‐
+       Check  all regular files in the file tree below the current working di‐
        rectory:
        # cshatag -recursive . > cshatag.log
+       Errors like corrupt files will then be printed to stderr  or  grep  for
+       "corrupt" in cshatag.log.
 
        To remove the extended attributes from all files:
        # cshatag -recursive -remove .

@@ -38,8 +38,9 @@ func walkFn(path string, info os.FileInfo, err error) error {
 	} else if info.Mode().IsRegular() {
 		checkFile(path)
 	} else if !info.IsDir() {
-		fmt.Fprintf(os.Stderr, "Error: %q is not a regular file.\n", path)
-		stats.errorsNotRegular++
+		if !args.qq {
+			fmt.Printf("<nonregular> %s\n", path)
+		}
 	}
 	return nil
 }
@@ -51,7 +52,7 @@ func processArg(fn string) {
 	fi, err := os.Lstat(fn) // Using Lstat to be consistent with filepath.Walk for symbolic links.
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		stats.errorsOther++
+		stats.errorsOpening++
 	} else if fi.Mode().IsRegular() {
 		checkFile(fn)
 	} else if fi.IsDir() {

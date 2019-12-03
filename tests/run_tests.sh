@@ -114,6 +114,7 @@ if [[ $RES -ne 3 ]]; then
 	echo "should have returned an error code 3, but returned $RES"
 	exit 1
 fi
+rm -f symlink1
 
 echo "*** Testing timechange ***"
 echo same > foo.txt
