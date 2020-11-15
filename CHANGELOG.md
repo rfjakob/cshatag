@@ -1,9 +1,10 @@
 *Short changelog - for all the details look at the git log.*
 
-vNEXT, in progress
+v2.0, 2020-11-15
+* Rewrite cshatag in Go
+* add MacOS support
 * Add `-remove` flag
 * Add `-q` and `-qq` flags
-* Rewrite cshatag in Go and add MacOS support
 * Accept multiple files per invocation to improve performance
 * Work around problems on MacOS SMB mounts
   ([#11](https://github.com/rfjakob/cshatag/pull/11))

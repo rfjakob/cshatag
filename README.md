@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/rfjakob/cshatag.svg?branch=master)](https://travis-ci.org/rfjakob/cshatag)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rfjakob/cshatag)](https://goreportcard.com/report/github.com/rfjakob/cshatag)
 [Changelog](CHANGELOG.md)
+[Releases](https://github.com/rfjakob/cshatag/releases)
 
 ```
 CSHATAG(1)                       User Manuals                       CSHATAG(1)
