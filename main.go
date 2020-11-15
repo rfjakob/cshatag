@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 )
 
+// GitVersion is set by the Makefile and contains the version string.
 var GitVersion = ""
 
 var stats struct {
