@@ -1,5 +1,7 @@
 PREFIX ?= /usr/local
 GITVERSION := $(shell git describe --dirty)
+TARGZ := cshatag_${GITVERSION}_$(shell go env GOOS)-static_$(shell go env GOARCH).tar.gz
+GPG_KEY_ID ?= 23A02740
 
 .PHONY: all
 all: cshatag README.md
@@ -34,3 +36,8 @@ README.md: cshatag.1 Makefile
 .PHONY: test
 test: cshatag
 	./tests/run_tests.sh
+
+.PHONY: release
+release: cshatag cshatag.1
+	tar --owner=root --group=root -czf ${TARGZ} cshatag cshatag.1
+	gpg -u ${GPG_KEY_ID} --armor --detach-sig ${TARGZ}
