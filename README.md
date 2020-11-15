@@ -13,9 +13,9 @@ SYNOPSIS
 
 DESCRIPTION
        cshatag is a minimal and fast re-implementation of shatag
-       (  https://bitbucket.org/maugier/shatag  ,  written in python by Maxime
+       (  https://github.com/maugier/shatag  ,  written  in  Python  by Maxime
        Augier )
-       in a compiled language.
+       in a compiled language (since v2.0: Go, earlier versions: C).
 
        cshatag is a tool to detect silent data corruption. It writes the mtime
        and  the sha256 checksum of a file into the file's extended attributes.
@@ -31,8 +31,8 @@ DESCRIPTION
             <timechange>  only mtime has changed, checksum stayed the same
             <corrupt>     mtime stayed the same but checksum changed
 
-       cshatag aims to be format-compatible with shatag and uses the same  ex‐
-       tended attributes (see the COMPATIBILITY section).
+       cshatag aims to be format-compatible with  shatag  and  uses  the  same
+       extended attributes (see the COMPATIBILITY section).
 
        cshatag was written in C in 2012 and has been rewritten in Go in 2019.
 
@@ -43,11 +43,11 @@ OPTIONS
        -qq         quiet2 mode - only report <corrupt> files and errors
 
 EXAMPLES
-       Check  all regular files in the file tree below the current working di‐
-       rectory:
-       # cshatag -recursive . > cshatag.log
-       Errors like corrupt files will then be printed to stderr  or  grep  for
-       "corrupt" in cshatag.log.
+       Check  all  regular  files  in  the file tree below the current working
+       directory:
+       # cshatag -qq -recursive .
+       Errors like corrupt files will be printed to stderr.  Run without "-qq"
+       to see progress output.
 
        To remove the extended attributes from all files:
        # cshatag -recursive -remove .
@@ -67,8 +67,8 @@ COMPATIBILITY
        last few digits.
 
 AUTHOR
-       Jakob   Unterwurzacher   <jakobunt@gmail.com>,   https://github.com/rf‐
-       jakob/cshatag
+       Jakob                Unterwurzacher               <jakobunt@gmail.com>,
+       https://github.com/rfjakob/cshatag
 
 COPYRIGHT
        Copyright 2012 Jakob Unterwurzacher. MIT License.
