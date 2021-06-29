@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron:  '0 12 * * *' # Every day noon UTC
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Make "git describe" work
+
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '*' # Build on latest Go release so we catch breakage
+
+    - run: go version
+
+    - run: sudo apt-get -qq install attr
+
+    - run: make
+
+    - run: make test
