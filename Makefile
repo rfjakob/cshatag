@@ -33,6 +33,7 @@ README.md: cshatag.1 Makefile header.md
 
 .PHONY: test
 test: cshatag
+	go vet -all .
 	./tests/run_tests.sh
 
 .PHONY: release
