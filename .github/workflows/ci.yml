@@ -25,3 +25,8 @@ jobs:
     - run: make
 
     - run: make test
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cshatag static binary
+        path: cshatag
