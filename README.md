@@ -1,7 +1,24 @@
 [![Build Status](https://travis-ci.org/rfjakob/cshatag.svg?branch=master)](https://travis-ci.org/rfjakob/cshatag)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rfjakob/cshatag)](https://goreportcard.com/report/github.com/rfjakob/cshatag)
-[Changelog](CHANGELOG.md)
-[Releases](https://github.com/rfjakob/cshatag/releases)
+•
+[View Changelog](CHANGELOG.md)
+•
+[Download Binary Releases](https://github.com/rfjakob/cshatag/releases)
+
+cshatag is a tool to detect silent data corruption. It is meant to run periodically
+and stores the SHA256 of each file as an extended attribute.
+See the [Man Page](#man-page) below for details.
+
+Compile Yourself
+----------------
+```
+$ git clone https://github.com/rfjakob/cshatag.git
+$ cd cshatag
+$ make
+```
+
+Man Page
+--------
 
 ```
 CSHATAG(1)                       User Manuals                       CSHATAG(1)
@@ -32,8 +49,8 @@ DESCRIPTION
             <timechange>  only mtime has changed, checksum stayed the same
             <corrupt>     mtime stayed the same but checksum changed
 
-       cshatag aims to be format-compatible with  shatag  and  uses  the  same
-       extended attributes (see the COMPATIBILITY section).
+       cshatag aims to be format-compatible with shatag and uses the same  ex‐
+       tended attributes (see the COMPATIBILITY section).
 
        cshatag was written in C in 2012 and has been rewritten in Go in 2019.
 
@@ -44,8 +61,8 @@ OPTIONS
        -qq         quiet2 mode - only report <corrupt> files and errors
 
 EXAMPLES
-       Check  all  regular  files  in  the file tree below the current working
-       directory:
+       Check  all regular files in the file tree below the current working di‐
+       rectory:
        # cshatag -qq -recursive .
        Errors like corrupt files will be printed to stderr.  Run without "-qq"
        to see progress output.
@@ -68,8 +85,8 @@ COMPATIBILITY
        last few digits.
 
 AUTHOR
-       Jakob                Unterwurzacher               <jakobunt@gmail.com>,
-       https://github.com/rfjakob/cshatag
+       Jakob   Unterwurzacher   <jakobunt@gmail.com>,   https://github.com/rf‐
+       jakob/cshatag
 
 COPYRIGHT
        Copyright 2012 Jakob Unterwurzacher. MIT License.
