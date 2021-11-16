@@ -25,6 +25,12 @@ diff -u 1.expected 1.out
 ../cshatag foo.txt > 2.out
 diff -u 2.expected 2.out
 
+echo "*** Testing outdated file ***"
+echo changed > foo.txt
+TZ=CET touch -t 202001010000 foo.txt
+../cshatag foo.txt > 3.out
+diff -u 3.expected 3.out
+
 echo "*** Looking for NULL bytes (shouldn't find any)***"
 if getfattr -n user.shatag.sha256 foo.txt -e hex | grep 00 ; then
 	echo "error: NULL byte found"
@@ -82,17 +88,17 @@ rm -f foo.txt
 TZ=CET touch -t 201901010000 foo.txt
 ../cshatag foo.txt > 1.out
 diff -u 1.expected 1.out
-../cshatag --remove foo.txt > 3.out
-diff -u 3.expected 3.out
+../cshatag --remove foo.txt > 4.out
+diff -u 4.expected 4.out
 set +e
-../cshatag --remove foo.txt 2> 4.err
+../cshatag --remove foo.txt 2> 5.err
 RES=$?
 set -e
 if [[ $RES -eq 0 ]]; then
 	echo "should have returned an error code, but returned 0"
 	exit 1
 fi
-diff -u 4.expected 4.err
+diff -u 5.expected 5.err
 
 echo "*** Testing nonexisting file ***"
 set +e
@@ -121,24 +127,24 @@ echo same > foo.txt
 TZ=CET touch -t 201901010000 foo.txt
 ../cshatag foo.txt > /dev/null
 TZ=CET touch -t 201901010001 foo.txt
-../cshatag foo.txt > 5.out
-diff -u 5.expected 5.out
+../cshatag foo.txt > 6.out
+diff -u 6.expected 6.out
 
 echo "*** Testing recursive flag ***"
 rm -rf foo
 mkdir foo
 TZ=CET touch -t 201901010000 foo/foo.txt
 set +e
-../cshatag foo 2> 6.err
+../cshatag foo 2> 7.err
 RES=$?
 set -e
 if [[ $RES -ne 3 ]]; then
 	echo "should have returned error code 3"
 	exit 1
 fi
-diff -u 6.expected 6.err
-../cshatag --recursive foo > 7.out
-diff -u 7.expected 7.out
+diff -u 7.expected 7.err
+../cshatag --recursive foo > 8.out
+diff -u 8.expected 8.out
 rm -rf foo
 
 echo "*** ALL TESTS PASSED ***"

@@ -20,6 +20,7 @@ var stats struct {
 	corrupt            int
 	timechange         int
 	outdated           int
+	newfile		   int
 	ok                 int
 }
 
@@ -117,7 +118,7 @@ func main() {
 		}
 		os.Exit(6)
 	}
-	if (stats.ok + stats.outdated + stats.timechange) == stats.total {
+	if (stats.ok + stats.outdated + stats.timechange + stats.newfile) == stats.total {
 		os.Exit(0)
 	}
 	os.Exit(6)

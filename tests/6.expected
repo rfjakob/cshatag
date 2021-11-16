@@ -1,1 +1,3 @@
-Error: "foo" is a directory, did you mean to use the '-recursive' option?
+<timechange> foo.txt
+ stored: a6328afc76e9db71da297ebff4b0d3e7a7eb3b01d917c05a6573fef121b6ecb6 1546297200.000000000
+ actual: a6328afc76e9db71da297ebff4b0d3e7a7eb3b01d917c05a6573fef121b6ecb6 1546297260.000000000

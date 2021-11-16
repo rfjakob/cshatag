@@ -24,6 +24,13 @@ type fileTimestamp struct {
 	ns uint32
 }
 
+func zeroFileTimeStamp() fileTimestamp {
+	return fileTimestamp{
+		s: uint64(0),
+		ns: uint32(0),
+	}
+}
+
 func (ts *fileTimestamp) prettyPrint() string {
 	return fmt.Sprintf("%010d.%09d", ts.s, ts.ns)
 }
@@ -195,6 +202,12 @@ func checkFile(fn string) {
 			fmt.Printf("<timechange> %s\n", fn)
 		}
 		stats.timechange++
+	} else if bytes.Equal(stored.sha256, []byte(zeroSha256)) && (stored.ts == zeroFileTimeStamp()) {
+		// no metadata indicates a 'new' file
+		if !args.qq {
+			fmt.Printf("<new> %s\n", fn)
+		}
+		stats.newfile++
 	} else {
 		// timestamp is outdated
 		if !args.qq {
