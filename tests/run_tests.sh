@@ -12,8 +12,26 @@ function cleanup {
 trap cleanup EXIT
 
 # Check that we have getfattr / setfattr
-getfattr --version > /dev/null
-setfattr --version > /dev/null
+if command -v getfattr > /dev/null 2>&1
+then
+	# we have getfattr, make sure we have setfattr
+	if ! command -v setfattr > /dev/null 2>&1
+	then
+		echo "error: getfattr exists but not setfattr"
+		exit 1
+	else
+		ATTRVER="linux"
+	fi
+else
+	# no getfattr, see if we have xattr
+	if command -v xattr > /dev/null 2>&1
+	then
+		ATTRVER="macos"
+	else
+		echo "error: no getfattr or xattr available"
+		exit 1
+	fi
+fi
 
 cd "$(dirname "$0")"
 
@@ -32,7 +50,14 @@ TZ=CET touch -t 202001010000 foo.txt
 diff -u 3.expected 3.out
 
 echo "*** Looking for NULL bytes (shouldn't find any)***"
-if getfattr -n user.shatag.sha256 foo.txt -e hex | grep 00 ; then
+if [ "$ATTRVER" = "linux" ]
+then
+	RESULT=$(getfattr -n user.shatag.sha256 foo.txt -e hex)
+else
+	RESULT=$(xattr -x -p user.shatag.sha256 foo.txt)
+fi
+
+if echo "$RESULT" | grep 00 ; then
 	echo "error: NULL byte found"
 	exit 1
 fi
@@ -53,19 +78,31 @@ echo > foo.txt
 
 echo "*** Testing new 100-byte file ***"
 rm -f foo.txt
-dd if=/dev/zero of=foo.txt bs=100 count=1 status=none
+echo "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" > foo.txt
 ../cshatag foo.txt > /dev/null
 ../cshatag foo.txt > /dev/null
 
 echo "*** Testing cshatag v1.0 format with appended NULL byte ***"
 rm -f foo.txt
 TZ=CET touch -t 201901010000 foo.txt
-setfattr -n user.shatag.ts -v "1546297200.000000000" foo.txt
-setfattr -n user.shatag.sha256 -v 0x6533623063343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500 foo.txt
+if [ "$ATTRVER" = "linux" ]
+then
+	setfattr -n user.shatag.ts -v "1546297200.000000000" foo.txt
+	setfattr -n user.shatag.sha256 -v 0x6533623063343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500 foo.txt
+else
+	xattr -w user.shatag.ts "1546297200.000000000" foo.txt
+	xattr -x -w user.shatag.sha256 6533623063343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500 foo.txt
+fi
+
 ../cshatag foo.txt > /dev/null
 
 echo "*** Testing shatag / cshatag v1.1 format without NULL byte ***"
-setfattr -n user.shatag.sha256 -v 0x65336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535 foo.txt
+if [ "$ATTRVER" = "linux" ]
+then
+	setfattr -n user.shatag.sha256 -v 0x65336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535 foo.txt
+else
+	xattr -x -w user.shatag.sha256 65336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535 foo.txt
+fi
 ../cshatag foo.txt > /dev/null
 
 echo "*** Corrupt file should be flagged ***"
@@ -98,7 +135,14 @@ if [[ $RES -eq 0 ]]; then
 	echo "should have returned an error code, but returned 0"
 	exit 1
 fi
-diff -u 5.expected 5.err
+
+# MacOS returns ENOATTR instead of ENODATA on the remove
+if [ "$ATTRVER" = "linux" ]
+then 
+	diff -u 5.expected 5.err
+else
+	diff -u 5.expected.mac 5.err
+fi
 
 echo "*** Testing nonexisting file ***"
 set +e
