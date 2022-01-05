@@ -44,6 +44,7 @@ DESCRIPTION
        stdout and the stored checksum is updated.
 
        File statuses that appear on stdout are:
+            <new>         file is missing both attributes
             <outdated>    both mtime and checksum have changed
             <ok>          both checksum and mtime stayed the same
             <timechange>  only mtime has changed, checksum stayed the same
@@ -55,6 +56,7 @@ DESCRIPTION
        cshatag was written in C in 2012 and has been rewritten in Go in 2019.
 
 OPTIONS
+       -dry-run    don't make any changes
        -recursive  recursively process the contents of directories
        -remove     remove cshatag's xattrs from FILE
        -q          quiet mode - don't report <ok> files

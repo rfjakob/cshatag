@@ -1,5 +1,8 @@
 *Short changelog - for all the details look at the git log.*
 
+vNEXT, IN PROGRESS
+* Add `-dry-run` [#22](https://github.com/rfjakob/cshatag/issues/22)
+
 v2.0, 2020-11-15
 * Rewrite cshatag in Go
 * add MacOS support

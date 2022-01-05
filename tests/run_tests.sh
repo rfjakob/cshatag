@@ -129,6 +129,7 @@ TZ=CET touch -t 201901010000 foo.txt
 TZ=CET touch -t 201901010001 foo.txt
 ../cshatag foo.txt > 6.out
 diff -u 6.expected 6.out
+rm foo.txt
 
 echo "*** Testing recursive flag ***"
 rm -rf foo
@@ -146,5 +147,20 @@ diff -u 7.expected 7.err
 ../cshatag --recursive foo > 8.out
 diff -u 8.expected 8.out
 rm -rf foo
+
+echo '*** Testing -dry-run ***'
+TZ=CET touch -t 201901010000 foo.txt
+../cshatag -dry-run foo.txt > 9.out
+diff -u 9.expected 9.out
+# Because with -n we have made no changes, we get the same output again.
+../cshatag foo.txt > 9.out2
+diff -u 9.expected 9.out2
+
+echo '*** Testing -dry-run -remove ***'
+../cshatag -dry-run -remove foo.txt > 11.out
+diff -u 11.expected 11.out
+# Because with -n we have made no changes, we get the same output again.
+../cshatag -remove foo.txt > 11.out2
+diff -u 11.expected 11.out2
 
 echo "*** ALL TESTS PASSED ***"

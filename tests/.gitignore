@@ -1,5 +1,5 @@
 foo/foo.txt
 foo.txt
-*.out
+*.out*
 *.err
 symlink1
