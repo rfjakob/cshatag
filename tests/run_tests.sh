@@ -11,27 +11,42 @@ function cleanup {
 
 trap cleanup EXIT
 
-# Check that we have getfattr / setfattr
-if command -v getfattr > /dev/null 2>&1
-then
-	# we have getfattr, make sure we have setfattr
-	if ! command -v setfattr > /dev/null 2>&1
-	then
-		echo "error: getfattr exists but not setfattr"
-		exit 1
+function get_sha256() {
+# outputs hex encoded user.shatag.sha256 for file $1
+
+	if command -v getfattr > /dev/null 2>&1; then
+		getfattr -n user.shatag.sha256 "$1" -e hex
+	elif command -v xattr > /dev/null 2>&1; then
+		xattr -x -p user.shatag.sha256 "$1"
 	else
-		ATTRVER="linux"
-	fi
-else
-	# no getfattr, see if we have xattr
-	if command -v xattr > /dev/null 2>&1
-	then
-		ATTRVER="macos"
-	else
-		echo "error: no getfattr or xattr available"
 		exit 1
 	fi
-fi
+}
+
+function set_sha256() {
+# sets the hex value $1 to user.shatag.sha256 for the file $2
+
+	if command -v getfattr > /dev/null 2>&1; then
+		setfattr -n user.shatag.sha256 -v "0x$1" "$2"
+	elif command -v xattr > /dev/null 2>&1; then
+		xattr -x -w user.shatag.sha256 "$1" "$2"
+	else
+		exit 1
+	fi
+}
+
+function set_ts() {
+# sets the hex value $1 to user.shatag.ts for the file $2
+
+	if command -v getfattr > /dev/null 2>&1; then
+		setfattr -n user.shatag.ts -v "$1" "$2"
+	elif command -v xattr > /dev/null 2>&1; then
+		xattr -w user.shatag.ts "$1" "$2"
+	else
+		exit 1
+	fi
+
+}
 
 cd "$(dirname "$0")"
 
@@ -50,14 +65,7 @@ TZ=CET touch -t 202001010000 foo.txt
 diff -u 3.expected 3.out
 
 echo "*** Looking for NULL bytes (shouldn't find any)***"
-if [ "$ATTRVER" = "linux" ]
-then
-	RESULT=$(getfattr -n user.shatag.sha256 foo.txt -e hex)
-else
-	RESULT=$(xattr -x -p user.shatag.sha256 foo.txt)
-fi
-
-if echo "$RESULT" | grep 00 ; then
+if get_sha256 foo.txt | grep 00 ; then
 	echo "error: NULL byte found"
 	exit 1
 fi
@@ -85,24 +93,12 @@ echo "00000000000000000000000000000000000000000000000000000000000000000000000000
 echo "*** Testing cshatag v1.0 format with appended NULL byte ***"
 rm -f foo.txt
 TZ=CET touch -t 201901010000 foo.txt
-if [ "$ATTRVER" = "linux" ]
-then
-	setfattr -n user.shatag.ts -v "1546297200.000000000" foo.txt
-	setfattr -n user.shatag.sha256 -v 0x6533623063343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500 foo.txt
-else
-	xattr -w user.shatag.ts "1546297200.000000000" foo.txt
-	xattr -x -w user.shatag.sha256 6533623063343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500 foo.txt
-fi
-
+set_ts "1546297200.000000000" "foo.txt"
+set_sha256 "6533623063343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500" "foo.txt"
 ../cshatag foo.txt > /dev/null
 
 echo "*** Testing shatag / cshatag v1.1 format without NULL byte ***"
-if [ "$ATTRVER" = "linux" ]
-then
-	setfattr -n user.shatag.sha256 -v 0x65336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535 foo.txt
-else
-	xattr -x -w user.shatag.sha256 65336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535 foo.txt
-fi
+set_sha256 "65336230633434323938666331633134396166626634633839393666623932343237616534316534363439623933346361343935393931623738353262383535" "foo.txt"
 ../cshatag foo.txt > /dev/null
 
 echo "*** Corrupt file should be flagged ***"
@@ -137,12 +133,13 @@ if [[ $RES -eq 0 ]]; then
 fi
 
 # MacOS returns ENOATTR instead of ENODATA on the remove
-if [ "$ATTRVER" = "linux" ]
-then 
-	diff -u 5.expected 5.err
-else
+if [[ $(uname) == Darwin ]]
+then
 	diff -u 5.expected.mac 5.err
+else
+	diff -u 5.expected 5.err
 fi
+
 
 echo "*** Testing nonexisting file ***"
 set +e
