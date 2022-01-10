@@ -26,7 +26,7 @@ function get_sha256() {
 function set_sha256() {
 # sets the hex value $1 to user.shatag.sha256 for the file $2
 
-	if command -v getfattr > /dev/null 2>&1; then
+	if command -v setfattr > /dev/null 2>&1; then
 		setfattr -n user.shatag.sha256 -v "0x$1" "$2"
 	elif command -v xattr > /dev/null 2>&1; then
 		xattr -x -w user.shatag.sha256 "$1" "$2"
@@ -38,7 +38,7 @@ function set_sha256() {
 function set_ts() {
 # sets the hex value $1 to user.shatag.ts for the file $2
 
-	if command -v getfattr > /dev/null 2>&1; then
+	if command -v setfattr > /dev/null 2>&1; then
 		setfattr -n user.shatag.ts -v "$1" "$2"
 	elif command -v xattr > /dev/null 2>&1; then
 		xattr -w user.shatag.ts "$1" "$2"
