@@ -119,8 +119,10 @@ Changelog
 
 *Short changelog - for all the details look at the git log.*
 
-vNEXT, IN PROGRESS
+v2.1.0, 2022-10-22
 * Add `-dry-run` [#22](https://github.com/rfjakob/cshatag/issues/22)
+* This version is called `v2.1.0` as opposed to `v2.1` to conform
+  to go.mod versioning rules (three-digit semver).
 
 v2.0, 2020-11-15
 * Rewrite cshatag in Go
