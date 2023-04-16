@@ -204,4 +204,21 @@ diff -u 11.expected 11.out
 ../cshatag -remove foo.txt > 11.out2
 diff -u 11.expected 11.out2
 
+echo '*** Testing 100ns resolution ***'
+# https://github.com/rfjakob/cshatag/issues/21
+rm -rf foo.txt
+# Datestring generated using "date --rfc-3339=ns"
+touch --date="2023-04-16 20:56:16.585798497+02:00" foo.txt
+../cshatag foo.txt > /dev/null
+echo asd > foo.txt
+touch --date="2023-04-16 20:56:16.585798400+02:00" foo.txt
+set +e
+../cshatag foo.txt &> /dev/null
+RES=$?
+set -e
+if [[ $RES -ne 5 ]]; then
+	echo "returned $RES, should have returned error code 5"
+	exit 1
+fi
+
 echo "*** ALL TESTS PASSED ***"

@@ -33,6 +33,18 @@ func (ts *fileTimestamp) prettyPrint() string {
 	return fmt.Sprintf("%010d.%09d", ts.s, ts.ns)
 }
 
+// equal100ns compares ts and ts2 with 100ns resolution.
+// Why 100ns? That's what SMB supports.
+func (ts *fileTimestamp) equal100ns(ts2 *fileTimestamp) bool {
+	if ts.s != ts2.s {
+		return false
+	}
+	if ts.ns/100 != ts2.ns/100 {
+		return false
+	}
+	return true
+}
+
 type fileAttr struct {
 	ts     fileTimestamp
 	sha256 []byte
@@ -144,7 +156,7 @@ func checkFile(fn string) {
 		return
 	}
 
-	if stored.ts == actual.ts {
+	if stored.ts.equal100ns(&actual.ts) {
 		if bytes.Equal(stored.sha256, actual.sha256) {
 			if !args.q {
 				fmt.Printf("<ok> %s\n", fn)
