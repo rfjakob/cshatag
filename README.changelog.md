@@ -4,10 +4,12 @@ Changelog
 *Short changelog - for all the details look at the git log.*
 
 vNEXT, in progress
-* Use 100ns resultion when comparing timestamps instead of 1ns
-  to match SMB restrictions
-  ([#21](https://github.com/rfjakob/cshatag/issues/21),
+* Linux: use 100ns resolution when comparing timestamps instead of 1ns
+  to match SMB protocol restrictions
+  ([#21](https://github.com/rfjakob/cshatag/issues/21)
   [commit](https://github.com/rfjakob/cshatag/commit/3e1f62b38b493b2be75437c208ae7b1d6a90c8e8))
+* MacOS: use 1s resolution when comparing timestamps to match
+  MacOS SMB client restrictions ([#21](https://github.com/rfjakob/cshatag/issues/21))
 
 v2.1.0, 2022-10-22
 * Add `-dry-run` [#22](https://github.com/rfjakob/cshatag/issues/22)

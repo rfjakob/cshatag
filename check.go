@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -33,11 +34,16 @@ func (ts *fileTimestamp) prettyPrint() string {
 	return fmt.Sprintf("%010d.%09d", ts.s, ts.ns)
 }
 
-// equal100ns compares ts and ts2 with 100ns resolution.
-// Why 100ns? That's what SMB supports.
-func (ts *fileTimestamp) equal100ns(ts2 *fileTimestamp) bool {
+// equalTruncatedTimestamp compares ts and ts2 with 100ns resolution (Linux) or 1s (MacOS).
+// Why 100ns? That's what Samba and the Linux SMB client supports.
+// Why 1s? That's what the MacOS SMB client supports.
+func (ts *fileTimestamp) equalTruncatedTimestamp(ts2 *fileTimestamp) bool {
 	if ts.s != ts2.s {
 		return false
+	}
+	// We only look at integer seconds on MacOS, so we are done here.
+	if runtime.GOOS == "darwin" {
+		return true
 	}
 	if ts.ns/100 != ts2.ns/100 {
 		return false
@@ -156,7 +162,7 @@ func checkFile(fn string) {
 		return
 	}
 
-	if stored.ts.equal100ns(&actual.ts) {
+	if stored.ts.equalTruncatedTimestamp(&actual.ts) {
 		if bytes.Equal(stored.sha256, actual.sha256) {
 			if !args.q {
 				fmt.Printf("<ok> %s\n", fn)
