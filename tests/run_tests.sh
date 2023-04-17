@@ -1,7 +1,5 @@
 #!/usr/bin/env bats
 
-bats_require_minimum_version 1.5.0
-
 function setup() {
 	cd "$(dirname "$BATS_TEST_FILENAME")"
 }
@@ -102,7 +100,8 @@ set_sha256 "65336230633434323938666331633134396166626634633839393666623932343237
 @test "Corrupt file should be flagged" {
 echo "123" > foo.txt
 TZ=CET touch -t 201901010000 foo.txt
-run ! ../cshatag foo.txt &> /dev/null
+run ../cshatag foo.txt &> /dev/null
+[ "$status" -ne 0 ]
 }
 
 @test "Corrupt file should look ok on 2nd run" {
@@ -128,12 +127,14 @@ fi
 }
 
 @test "Testing nonexisting file" {
-run -2 ../cshatag nonexisting.txt &> /dev/null
+run ../cshatag nonexisting.txt &> /dev/null
+[ "$status" -eq 2 ]
 }
 
 @test "Testing symlink" {
 ln -s / symlink1
-run -3 ../cshatag symlink1 &> /dev/null
+run ../cshatag symlink1 &> /dev/null
+[ "$status" -eq 3 ]
 rm -f symlink1
 }
 
@@ -151,7 +152,8 @@ rm foo.txt
 rm -rf foo
 mkdir foo
 TZ=CET touch -t 201901010000 foo/foo.txt
-run -3 bash -c "../cshatag foo 2> 7.err"
+run bash -c "../cshatag foo 2> 7.err"
+[ "$status" -eq 3 ]
 diff -u 7.expected 7.err
 ../cshatag --recursive foo > 8.out
 diff -u 8.expected 8.out
@@ -183,5 +185,6 @@ touch --date="2023-04-16 20:56:16.585798497+02:00" foo.txt
 ../cshatag foo.txt > /dev/null
 echo asd > foo.txt
 touch --date="2023-04-16 20:56:16.585798400+02:00" foo.txt
-run -5 ../cshatag foo.txt &> /dev/null
+run ../cshatag foo.txt &> /dev/null
+[ "$status" -eq 5 ]
 }
