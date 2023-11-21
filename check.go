@@ -191,10 +191,17 @@ func checkFile(fn string) {
 		}
 		stats.outdated++
 	}
+
 	if !args.qq {
 		printComparison(stored, actual)
 	}
-	err = storeAttr(f, actual)
+
+	// Only update the stored attribute if it is not corrupted **OR**
+	// if argument 'corruptupdate' been given.
+	if stored.ts != actual.ts || args.corruptupdate {
+		err = storeAttr(f, actual)
+	}
+
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		stats.errorsWritingXattr++
