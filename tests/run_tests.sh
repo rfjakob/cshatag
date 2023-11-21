@@ -104,8 +104,14 @@ run ../cshatag foo.txt &> /dev/null
 [ "$status" -ne 0 ]
 }
 
-@test "Corrupt file should look ok on 2nd run" {
-../cshatag foo.txt &> /dev/null
+@test "Corrupt file should still be flagged on 2nd run" {
+run ../cshatag foo.txt &> /dev/null
+[ "$status" -ne 0 ]
+}
+
+@test "Corrupt file should look ok after -fix" {
+run ../cshatag -fix foo.txt &> /dev/null
+../cshatag -qq foo.txt
 }
 
 @test "Testing removal of extended attributes" {

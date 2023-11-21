@@ -30,6 +30,7 @@ var args struct {
 	q         bool
 	qq        bool
 	dryrun    bool
+	fix       bool
 }
 
 // walkFn is used when `cshatag` is called with the `--recursive` option. It is the function called
@@ -84,6 +85,7 @@ func main() {
 	flag.BoolVar(&args.recursive, "recursive", false, "Recursively descend into subdirectories. "+
 		"Symbolic links are not followed.")
 	flag.BoolVar(&args.dryrun, "dry-run", false, "don't make any changes")
+	flag.BoolVar(&args.fix, "fix", false, "fix the stored sha256 on corrupt files")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] FILE [FILE2 ...]\n", myname)

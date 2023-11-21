@@ -52,11 +52,11 @@ DESCRIPTION
        in a compiled language (since v2.0: Go, earlier versions: C).
 
        cshatag is a tool to detect silent data corruption. It writes the mtime
-       and  the sha256 checksum of a file into the file's extended attributes.
-       The filesystem needs to be mounted with user_xattr enabled for this  to
-       work.   When  run  again,  it compares stored mtime and checksum. If it
-       finds that the mtime is unchanged but  the  checksum  has  changed,  it
-       warns  on  stderr.   In  any case, the status of the file is printed to
+       and the sha256 checksum of a file into the file's extended  attributes.
+       The  filesystem needs to be mounted with user_xattr enabled for this to
+       work.  When run again, it compares stored mtime  and  checksum.  If  it
+       finds  that  the  mtime  is  unchanged but the checksum has changed, it
+       warns on stderr.  In any case, the status of the  file  is  printed  to
        stdout and the stored checksum is updated.
 
        File statuses that appear on stdout are:
@@ -66,7 +66,7 @@ DESCRIPTION
             <timechange>  only mtime has changed, checksum stayed the same
             <corrupt>     mtime stayed the same but checksum changed
 
-       cshatag aims to be format-compatible with shatag and uses the same  ex‐
+       cshatag  aims to be format-compatible with shatag and uses the same ex‐
        tended attributes (see the COMPATIBILITY section).
 
        cshatag was written in C in 2012 and has been rewritten in Go in 2019.
@@ -77,9 +77,10 @@ OPTIONS
        -remove     remove cshatag's xattrs from FILE
        -q          quiet mode - don't report <ok> files
        -qq         quiet2 mode - only report <corrupt> files and errors
+       -fix        fix the stored sha256 on corrupt files
 
 EXAMPLES
-       Check  all regular files in the file tree below the current working di‐
+       Check all regular files in the file tree below the current working  di‐
        rectory:
        # cshatag -qq -recursive .
        Errors like corrupt files will be printed to stderr.  Run without "-qq"

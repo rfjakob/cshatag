@@ -165,7 +165,11 @@ func checkFile(fn string) {
 			stats.ok++
 			return
 		}
-		fmt.Fprintf(os.Stderr, "Error: corrupt file %q\n", fn)
+		fixing := " Keeping hash as-is (use -fix to force hash update)."
+		if args.fix {
+			fixing = " Fixing hash (-fix was passed)."
+		}
+		fmt.Fprintf(os.Stderr, "Error: corrupt file %q. %s\n", fn, fixing)
 		fmt.Printf("<corrupt> %s\n", fn)
 		stats.corrupt++
 	} else if bytes.Equal(stored.sha256, actual.sha256) {
@@ -186,10 +190,17 @@ func checkFile(fn string) {
 		}
 		stats.outdated++
 	}
+
 	if !args.qq {
 		printComparison(stored, actual)
 	}
-	err = storeAttr(f, actual)
+
+	// Only update the stored attribute if it is not corrupted **OR**
+	// if argument '-fix' been given.
+	if stored.ts != actual.ts || args.fix {
+		err = storeAttr(f, actual)
+	}
+
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		stats.errorsWritingXattr++
