@@ -131,6 +131,10 @@ Changelog
 
 *Short changelog - for all the details look at the git log.*
 
+v2.2.1, 2024-08-23
+* Fix `Makefile` to ensure the correct version string is baked
+  into the binary ([#29](https://github.com/rfjakob/cshatag/issues/29))
+
 v2.2.0, 2024-08-23
 * Do not update corrupt files unless `-fix` is passed ([#28](https://github.com/rfjakob/cshatag/pull/28),
   **behavoir change**)
