@@ -121,6 +121,8 @@ Changelog
 *Short changelog - for all the details look at the git log.*
 
 vNEXT, in progress
+* Do not update corrupt files unless `-fix` is passed ([#28](https://github.com/rfjakob/cshatag/pull/28),
+  **behavoir change**)
 * Linux: use 100ns resolution when comparing timestamps instead of 1ns
   to match SMB protocol restrictions
   ([#21](https://github.com/rfjakob/cshatag/issues/21)
