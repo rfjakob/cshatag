@@ -26,13 +26,13 @@ clean:
 format:
 	go fmt ./...
 
-README.md: cshatag.1 Makefile README.header.md README.changelog.md
+README.md: cshatag.1 Makefile README.header.md CHANGELOG.md
 	cat README.header.md > README.md
 	@echo >> README.md
 	@echo '```' >> README.md
 	MANWIDTH=80 man ./cshatag.1 >> README.md
 	@echo '```' >> README.md
-	cat README.changelog.md >> README.md
+	cat CHANGELOG.md >> README.md
 
 .PHONY: test
 test: cshatag
