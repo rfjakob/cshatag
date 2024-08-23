@@ -13,9 +13,9 @@ import (
 // storeAttr stores "attr" into extended attributes.
 // Should look like this afterwards:
 //
-//     $ getfattr -d foo.txt
-//     user.shatag.sha256="dc9fe2260fd6748b29532be0ca2750a50f9eca82046b15497f127eba6dda90e8"
-//     user.shatag.ts="1560177334.020775051"
+//	$ getfattr -d foo.txt
+//	user.shatag.sha256="dc9fe2260fd6748b29532be0ca2750a50f9eca82046b15497f127eba6dda90e8"
+//	user.shatag.ts="1560177334.020775051"
 func storeAttr(f *os.File, attr fileAttr) (err error) {
 	if args.dryrun {
 		return nil

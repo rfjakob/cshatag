@@ -56,9 +56,9 @@ func (a *fileAttr) prettyPrint() string {
 // getStoredAttr reads the stored extendend attributes from a file. The file
 // should look like this:
 //
-//     $ getfattr -d foo.txt
-//     user.shatag.sha256="dc9fe2260fd6748b29532be0ca2750a50f9eca82046b15497f127eba6dda90e8"
-//     user.shatag.ts="1560177334.020775051"
+//	$ getfattr -d foo.txt
+//	user.shatag.sha256="dc9fe2260fd6748b29532be0ca2750a50f9eca82046b15497f127eba6dda90e8"
+//	user.shatag.ts="1560177334.020775051"
 func getStoredAttr(f *os.File) (attr fileAttr, err error) {
 	attr.sha256 = []byte(zeroSha256)
 	val, err := xattr.FGet(f, xattrSha256)
@@ -112,8 +112,8 @@ func getActualAttr(f *os.File) (attr fileAttr, err error) {
 
 // printComparison prints something like this:
 //
-//     stored: faa28bfa6332264571f28b4131b0673f0d55a31a2ccf5c873c435c235647bf76 1560177189.769244818
-//     actual: dc9fe2260fd6748b29532be0ca2750a50f9eca82046b15497f127eba6dda90e8 1560177334.020775051
+//	stored: faa28bfa6332264571f28b4131b0673f0d55a31a2ccf5c873c435c235647bf76 1560177189.769244818
+//	actual: dc9fe2260fd6748b29532be0ca2750a50f9eca82046b15497f127eba6dda90e8 1560177334.020775051
 func printComparison(stored fileAttr, actual fileAttr) {
 	fmt.Printf(" stored: %s\n actual: %s\n", stored.prettyPrint(), actual.prettyPrint())
 }
