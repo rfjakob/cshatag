@@ -115,8 +115,8 @@ COMPATIBILITY
        last few digits.
 
 AUTHOR
-       Jakob   Unterwurzacher   <jakobunt@gmail.com>,   https://github.com/rf‐
-       jakob/cshatag
+       Jakob Unterwurzacher <jakobunt@gmail.com>
+       https://github.com/rfjakob/cshatag
 
 COPYRIGHT
        Copyright 2012 Jakob Unterwurzacher. MIT License.
