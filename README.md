@@ -25,8 +25,19 @@ Checksums stored in single central database
 Checksums stored in one database per directory
 * https://github.com/laktak/chkbit-py
 
+Download
+--------
+Static amd64 binary that should work on all Linux distros:
+https://github.com/rfjakob/cshatag/releases
+
+Distro Packages
+---------------
+[![Packaging status](https://repology.org/badge/vertical-allrepos/cshatag.svg)](https://repology.org/project/cshatag/versions)
+
 Compile Yourself
 ----------------
+Needs git, Go and make.
+
 ```
 $ git clone https://github.com/rfjakob/cshatag.git
 $ cd cshatag
