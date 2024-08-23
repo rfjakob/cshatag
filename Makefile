@@ -6,7 +6,9 @@ GPG_KEY_ID ?= 23A02740
 .PHONY: all
 all: cshatag README.md
 
-cshatag: *.go Makefile
+# Always rebuild to make sure GITVERSION is up to date.
+.PHONY: cshatag
+cshatag:
 	CGO_ENABLED=0 go build "-ldflags=-X main.GitVersion=${GITVERSION}"
 
 .PHONY: install
