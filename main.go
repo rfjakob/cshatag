@@ -1,27 +1,31 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
+	"sync"
+	"sync/atomic"
 )
 
 // GitVersion is set by the Makefile and contains the version string.
 var GitVersion = ""
 
 var stats struct {
-	total              int
-	errorsNotRegular   int
-	errorsOpening      int
-	errorsWritingXattr int
-	errorsOther        int
-	inprogress         int
-	corrupt            int
-	timechange         int
-	outdated           int
-	newfile            int
-	ok                 int
+	total              uint32
+	errorsNotRegular   uint32
+	errorsOpening      uint32
+	errorsWritingXattr uint32
+	errorsOther        uint32
+	inprogress         uint32
+	corrupt            uint32
+	timechange         uint32
+	outdated           uint32
+	newfile            uint32
+	ok                 uint32
 }
 
 var args struct {
@@ -33,14 +37,20 @@ var args struct {
 	fix       bool
 }
 
+type Queue chan string
+
+var queue Queue = make(chan string, 100)
+
+var cpus = runtime.NumCPU()
+
 // walkFn is used when `cshatag` is called with the `--recursive` option. It is the function called
 // for each file or directory visited whilst traversing the file tree.
 func walkFn(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error accessing %q: %v\n", path, err)
-		stats.errorsOpening++
+		atomic.AddUint32(&stats.errorsOpening, 1)
 	} else if info.Mode().IsRegular() {
-		checkFile(path)
+		queueFile(path)
 	} else if !info.IsDir() {
 		if !args.qq {
 			fmt.Printf("<nonregular> %s\n", path)
@@ -56,19 +66,19 @@ func processArg(fn string) {
 	fi, err := os.Lstat(fn) // Using Lstat to be consistent with filepath.Walk for symbolic links.
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		stats.errorsOpening++
+		atomic.AddUint32(&stats.errorsOpening, 1)
 	} else if fi.Mode().IsRegular() {
-		checkFile(fn)
+		queueFile(fn)
 	} else if fi.IsDir() {
 		if args.recursive {
 			filepath.Walk(fn, walkFn)
 		} else {
 			fmt.Fprintf(os.Stderr, "Error: %q is a directory, did you mean to use the '-recursive' option?\n", fn)
-			stats.errorsNotRegular++
+			atomic.AddUint32(&stats.errorsNotRegular, 1)
 		}
 	} else {
 		fmt.Fprintf(os.Stderr, "Error: %q is not a regular file.\n", fn)
-		stats.errorsNotRegular++
+		atomic.AddUint32(&stats.errorsNotRegular, 1)
 	}
 }
 
@@ -102,9 +112,22 @@ func main() {
 		args.q = true
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	var wg sync.WaitGroup
+
+	for i := 1; i <= cpus; i++ {
+		wg.Add(1)
+		go worker(ctx, &wg)
+	}
+
 	for _, fn := range flag.Args() {
 		processArg(fn)
 	}
+
+	close(queue)
+
+	wg.Wait()
 
 	if stats.corrupt > 0 {
 		os.Exit(5)

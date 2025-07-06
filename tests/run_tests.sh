@@ -38,6 +38,8 @@ function set_ts() {
 
 }
 
+OS_TYPE="$(uname -s)"
+
 @test "Testing new empty file" {
 rm -f foo.txt
 TZ=CET touch -t 201901010000 foo.txt
@@ -187,10 +189,20 @@ diff -u 11.expected 11.out2
 # https://github.com/rfjakob/cshatag/issues/21
 rm -rf foo.txt
 # Datestring generated using "date --rfc-3339=ns"
-touch --date="2023-04-16 20:56:16.585798497+02:00" foo.txt
+touch_date_switch='--date'
+timestamp1="2023-04-16 20:56:16.585798497+02:00"
+timestamp2="2023-04-16 20:56:16.585798400+02:00"
+if [ "$OS_TYPE" != "Linux" ] # Assume BSD
+then
+  touch_date_switch='-d'
+  timestamp1="2023-04-16T20:56:16.585798497Z"
+  timestamp2="2023-04-16T20:56:16.585798400Z"
+  export TZ="+02:00"
+fi
+touch $touch_date_switch "$timestamp1" foo.txt
 ../cshatag foo.txt > /dev/null
 echo asd > foo.txt
-touch --date="2023-04-16 20:56:16.585798400+02:00" foo.txt
+touch $touch_date_switch "$timestamp2" foo.txt
 run ../cshatag foo.txt &> /dev/null
 [ "$status" -eq 5 ]
 }
