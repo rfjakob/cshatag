@@ -2,16 +2,20 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
-	"io"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/pkg/xattr"
+
+	"github.com/northbright/iocopy"
 )
 
 const xattrSha256 = "user.shatag.sha256"
@@ -89,14 +93,14 @@ func getMtime(f *os.File) (ts fileTimestamp, err error) {
 }
 
 // getActualAttr reads the actual modification time and hashes the file content.
-func getActualAttr(f *os.File) (attr fileAttr, err error) {
+func getActualAttr(ctx context.Context, f *os.File) (attr fileAttr, err error) {
 	attr.sha256 = []byte(zeroSha256)
 	attr.ts, err = getMtime(f)
 	if err != nil {
 		return attr, err
 	}
 	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
+	if _, err := iocopy.Copy(ctx, h, f); err != nil {
 		return attr, err
 	}
 	// Check if the file was modified while we were computing the hash
@@ -118,7 +122,18 @@ func printComparison(stored fileAttr, actual fileAttr) {
 	fmt.Printf(" stored: %s\n actual: %s\n", stored.prettyPrint(), actual.prettyPrint())
 }
 
-func checkFile(fn string) {
+func queueFile(fn string) {
+	queue <- fn
+}
+
+func worker(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for fn := range queue {
+		checkFile(ctx, fn)
+	}
+}
+
+func checkFile(ctx context.Context, fn string) {
 	stats.total++
 	f, err := os.Open(fn)
 	if err != nil {
@@ -142,12 +157,14 @@ func checkFile(fn string) {
 	}
 
 	stored, _ := getStoredAttr(f)
-	actual, err := getActualAttr(f)
+	actual, err := getActualAttr(ctx, f)
 	if err == syscall.EINPROGRESS {
 		if !args.qq {
 			fmt.Printf("<concurrent modification> %s\n", fn)
 		}
 		stats.inprogress++
+		return
+	} else if errors.Is(err, context.Canceled) {
 		return
 	} else if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
