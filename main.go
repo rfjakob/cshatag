@@ -5,10 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"sync/atomic"
+	"syscall"
 )
 
 // GitVersion is set by the Makefile and contains the version string.
@@ -35,13 +36,15 @@ var args struct {
 	qq        bool
 	dryrun    bool
 	fix       bool
+	jobs      int
 }
 
 type Queue chan string
 
-var queue Queue = make(chan string, 100)
+var queue Queue
 
-var cpus = runtime.NumCPU()
+var ctx context.Context
+var cancel context.CancelFunc
 
 // walkFn is used when `cshatag` is called with the `--recursive` option. It is the function called
 // for each file or directory visited whilst traversing the file tree.
@@ -50,7 +53,12 @@ func walkFn(path string, info os.FileInfo, err error) error {
 		fmt.Fprintf(os.Stderr, "Error accessing %q: %v\n", path, err)
 		atomic.AddUint32(&stats.errorsOpening, 1)
 	} else if info.Mode().IsRegular() {
-		queueFile(path)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			queueFile(path)
+		}
 	} else if !info.IsDir() {
 		if !args.qq {
 			fmt.Printf("<nonregular> %s\n", path)
@@ -96,6 +104,7 @@ func main() {
 		"Symbolic links are not followed.")
 	flag.BoolVar(&args.dryrun, "dry-run", false, "don't make any changes")
 	flag.BoolVar(&args.fix, "fix", false, "fix the stored sha256 on corrupt files")
+	flag.IntVar(&args.jobs, "jobs", 1, "Number of parallel jobs to run.")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] FILE [FILE2 ...]\n", myname)
@@ -112,11 +121,24 @@ func main() {
 		args.q = true
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel = context.WithCancel(context.Background())
 	defer cancel()
+
+	// Set up signal handler
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Start signal watcher goroutine
+	go func() {
+		sig := <-sigChan
+		fmt.Fprintf(os.Stderr, "\nReceived signal: %s\n", sig)
+		cancel()
+	}()
+
+	queue = make(chan string, args.jobs)
 	var wg sync.WaitGroup
 
-	for i := 1; i <= cpus; i++ {
+	for i := 1; i <= args.jobs; i++ {
 		wg.Add(1)
 		go worker(ctx, &wg)
 	}
