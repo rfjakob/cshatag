@@ -194,3 +194,12 @@ touch --date="2023-04-16 20:56:16.585798400+02:00" foo.txt
 run ../cshatag foo.txt &> /dev/null
 [ "$status" -eq 5 ]
 }
+
+@test 'Testing 1970 file' {
+# https://github.com/rfjakob/cshatag/issues/39
+# Tool thinks flatpak repo files are corrupted even without xattrs
+rm -rf foo.txt
+TZ=UTC touch -t 197001010000 foo.txt
+../cshatag foo.txt &> 12.out
+diff -u 12.expected 12.out
+}
