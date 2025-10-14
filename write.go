@@ -3,6 +3,7 @@ package main
 // This file has all functions that actually change something on disk
 
 import (
+	"encoding/hex"
 	"errors"
 	"os"
 	"runtime"
@@ -32,7 +33,7 @@ func storeAttr(f *os.File, attr fileAttr) (err error) {
 	if err != nil {
 		return
 	}
-	err = xattr.FSet(f, xattrSha256, attr.sha256)
+	err = xattr.FSet(f, xattrSha256, []byte(hex.EncodeToString(attr.sha256)))
 	return
 }
 
