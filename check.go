@@ -80,15 +80,19 @@ func (a *fileAttr) prettyPrint() string {
 //	user.shatag.ts="1560177334.020775051"
 func getStoredAttr(f *os.File) (attr fileAttr) {
 	val, err := xattr.FGet(f, xattrSha256)
-	if err == nil && len(val) >= 64 {
-		if len(val) > 64 {
-			fmt.Fprintf(os.Stderr, "Warning: ignoring trailing garbage (%d bytes)", len(val)-64)
-			val = val[:64]
-		}
-		attr.sha256, err = hex.DecodeString(string(val))
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: hex decode: %s", err)
-			attr.sha256 = nil
+	if err == nil {
+		if len(val) >= 64 {
+			if len(val) > 64 {
+				fmt.Fprintf(os.Stderr, "Warning: user.shatag.sha256 xattr: ignoring trailing garbage (%d bytes)\n", len(val)-64)
+				val = val[:64]
+			}
+			attr.sha256, err = hex.DecodeString(string(val))
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: user.shatag.sha256 xattr: hex decode: %s\n", err)
+				attr.sha256 = nil
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: user.shatag.sha256 xattr: incomplete value (%d bytes)\n", len(val))
 		}
 	}
 
