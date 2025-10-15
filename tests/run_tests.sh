@@ -15,7 +15,11 @@ function get_sha256() {
 	fi
 }
 
-# Set extended attribute user.shatag.sha256=$1 (hex string) for the file $2
+# Set extended attribute user.shatag.sha256=0x$1 for the file $2.
+# This allows to write arbitrary bytes into the xattr.
+#
+# If you want to write "hello world", you must use
+# set_sha256 68656C6C6F20776F726C64 foo.txt
 function set_sha256() {
 	if command -v setfattr > /dev/null 2>&1; then
 		setfattr -n user.shatag.sha256 -v "0x$1" "$2"
@@ -202,4 +206,43 @@ rm -rf foo.txt
 TZ=UTC touch -t 197001010000 foo.txt
 ../cshatag foo.txt &> 12.out
 diff -u 12.expected 12.out
+}
+
+@test "Empty shatag.ts xattr" {
+rm -rf foo.txt
+TZ=CET touch -t 201901010000 foo.txt
+../cshatag foo.txt
+set_ts "" foo.txt
+../cshatag foo.txt &> 13.out
+diff -u 13.expected 13.out
+}
+
+@test "Non-decimal shatag.ts xattr" {
+rm -rf foo.txt
+TZ=CET touch -t 201901010000 foo.txt
+../cshatag foo.txt
+set_ts "foo" foo.txt
+../cshatag foo.txt &> 14.out
+diff -u 14.expected 14.out
+}
+
+@test "Non-hex shatag.sha256 xattr" {
+rm -rf foo.txt
+TZ=CET touch -t 201901010000 foo.txt
+../cshatag foo.txt
+# "78797A" = "xyz"
+set_sha256 78797A63343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500 foo.txt
+../cshatag foo.txt &> 15.out
+diff -u 15.expected 15.out
+}
+
+@test "Empty shatag.sha256 xattr" {
+# https://github.com/rfjakob/cshatag/issues/41
+# Tool thinks file is corrupted when theres too little space in extended attributes
+rm -rf foo.txt
+TZ=CET touch -t 201901010000 foo.txt
+../cshatag foo.txt
+set_sha256 "" foo.txt
+../cshatag foo.txt &> 16.out
+diff -u 16.expected 16.out
 }

@@ -1,0 +1,4 @@
+Error: user.shatag.sha256 xattr: encoding/hex: invalid byte: U+0078 'x'
+<new> foo.txt
+ stored: ---------------------------------------------------------------- 1546297200.000000000
+ actual: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 1546297200.000000000

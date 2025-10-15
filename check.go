@@ -88,7 +88,7 @@ func getStoredAttr(f *os.File) (attr fileAttr) {
 			}
 			attr.sha256, err = hex.DecodeString(string(val))
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error: user.shatag.sha256 xattr: hex decode: %s\n", err)
+				fmt.Fprintf(os.Stderr, "Error: user.shatag.sha256 xattr: %s\n", err)
 				attr.sha256 = nil
 			}
 		} else {
@@ -101,12 +101,14 @@ func getStoredAttr(f *os.File) (attr fileAttr) {
 		parts := strings.SplitN(string(val), ".", 2)
 		seconds, err := strconv.ParseUint(parts[0], 10, 64)
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: parsing seconds from user.shatag.ts: %v\n", err)
 			return
 		}
 		var nanoseconds uint64
 		if len(parts) > 1 {
 			nanoseconds, err = strconv.ParseUint(parts[1], 10, 32)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: parsing nanoseconds from user.shatag.ts: %v\n", err)
 				return
 			}
 		}
@@ -179,7 +181,7 @@ func checkFile(fn string) {
 		if !args.q {
 			fmt.Printf("<removed xattr> %s\n", fn)
 		}
-		stats.ok++
+		stats.removed++
 		return
 	}
 
@@ -197,53 +199,47 @@ func checkFile(fn string) {
 		return
 	}
 
-	if stored.ts.equalTruncatedTimestamp(actual.ts) {
-		if bytes.Equal(stored.sha256, actual.sha256) {
-			if !args.q {
-				fmt.Printf("<ok> %s\n", fn)
-			}
-			stats.ok++
-			return
-		}
+	var tsStatus attrStatus
+	if stored.ts == nil {
+		tsStatus = attrMiss
+	} else if stored.ts.equalTruncatedTimestamp(actual.ts) {
+		tsStatus = attrSame
+	} else {
+		tsStatus = attrDiff
+	}
+
+	var sha256status attrStatus
+	if stored.sha256 == nil {
+		sha256status = attrMiss
+	} else if bytes.Equal(stored.sha256, actual.sha256) {
+		sha256status = attrSame
+	} else {
+		sha256status = attrDiff
+	}
+
+	decision := lookupDecision(tsStatus, sha256status)
+	stats.decisions[decision]++
+	if decision == decisionCorrupt {
 		fixing := " Keeping hash as-is (use -fix to force hash update)."
 		if args.fix {
 			fixing = " Fixing hash (-fix was passed)."
 		}
 		fmt.Fprintf(os.Stderr, "Error: corrupt file %q. %s\n", fn, fixing)
-		fmt.Printf("<corrupt> %s\n", fn)
-		stats.corrupt++
-	} else if bytes.Equal(stored.sha256, actual.sha256) {
-		if !args.qq {
-			fmt.Printf("<timechange> %s\n", fn)
-		}
-		stats.timechange++
-	} else if stored.sha256 == nil && stored.ts == nil {
-		// no metadata indicates a 'new' file
-		if !args.qq {
-			fmt.Printf("<new> %s\n", fn)
-		}
-		stats.newfile++
-	} else {
-		// timestamp is outdated
-		if !args.qq {
-			fmt.Printf("<outdated> %s\n", fn)
-		}
-		stats.outdated++
+	}
+	if !args.q {
+		fmt.Printf("<%s> %s\n", decision, fn)
 	}
 
-	if !args.qq {
+	if decision != decisionOk && !args.qq {
 		printComparison(stored, actual)
 	}
 
-	// Only update the stored attribute if it is not corrupted **OR**
-	// if argument '-fix' been given.
-	if stored.ts == nil || *stored.ts != *actual.ts || args.fix {
+	// Write updated xattrs
+	if decision != decisionOk && decision != decisionCorrupt || decision == decisionCorrupt && args.fix {
 		err = storeAttr(f, actual)
-	}
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		stats.errorsWritingXattr++
-		return
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+			stats.errorsWritingXattr++
+		}
 	}
 }

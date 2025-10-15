@@ -17,11 +17,8 @@ var stats struct {
 	errorsWritingXattr int
 	errorsOther        int
 	inprogress         int
-	corrupt            int
-	timechange         int
-	outdated           int
-	newfile            int
-	ok                 int
+	removed            int
+	decisions          map[decision]int
 }
 
 var args struct {
@@ -31,6 +28,10 @@ var args struct {
 	qq        bool
 	dryrun    bool
 	fix       bool
+}
+
+func init() {
+	stats.decisions = make(map[decision]int)
 }
 
 // walkFn is used when `cshatag` is called with the `--recursive` option. It is the function called
@@ -106,7 +107,7 @@ func main() {
 		processArg(fn)
 	}
 
-	if stats.corrupt > 0 {
+	if stats.decisions[decisionCorrupt] > 0 {
 		os.Exit(5)
 	}
 
@@ -122,7 +123,11 @@ func main() {
 		}
 		os.Exit(6)
 	}
-	if (stats.ok + stats.outdated + stats.timechange + stats.newfile) == stats.total {
+	if (stats.decisions[decisionOk]+
+		stats.decisions[decisionOutdated]+
+		stats.decisions[decisionTimechange]+
+		stats.decisions[decisionNew])+
+		stats.removed == stats.total {
 		os.Exit(0)
 	}
 	os.Exit(6)

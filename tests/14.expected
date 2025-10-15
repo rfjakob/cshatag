@@ -1,0 +1,4 @@
+Error: parsing seconds from user.shatag.ts: strconv.ParseUint: parsing "foo": invalid syntax
+<timechange> foo.txt
+ stored: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ----------.---------
+ actual: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 1546297200.000000000
