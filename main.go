@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"io/fs"
 	"runtime/pprof"
 )
 
@@ -38,11 +39,11 @@ func init() {
 
 // walkFn is used when `cshatag` is called with the `--recursive` option. It is the function called
 // for each file or directory visited whilst traversing the file tree.
-func walkFn(path string, info os.FileInfo, err error) error {
+func walkFn(path string, info fs.DirEntry, err error) error {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error accessing %q: %v\n", path, err)
 		stats.errorsOpening++
-	} else if info.Mode().IsRegular() {
+	} else if info.Type().IsRegular() {
 		checkFile(path)
 	} else if !info.IsDir() {
 		if !args.qq {
@@ -64,7 +65,7 @@ func processArg(fn string) {
 		checkFile(fn)
 	} else if fi.IsDir() {
 		if args.recursive {
-			filepath.Walk(fn, walkFn)
+			filepath.WalkDir(fn, walkFn)
 		} else {
 			fmt.Fprintf(os.Stderr, "Error: %q is a directory, did you mean to use the '-recursive' option?\n", fn)
 			stats.errorsNotRegular++
