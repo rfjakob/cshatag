@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 )
 
 // GitVersion is set by the Makefile and contains the version string.
@@ -22,12 +23,13 @@ var stats struct {
 }
 
 var args struct {
-	remove    bool
-	recursive bool
-	q         bool
-	qq        bool
-	dryrun    bool
-	fix       bool
+	remove     bool
+	recursive  bool
+	q          bool
+	qq         bool
+	dryrun     bool
+	fix        bool
+	cpuprofile string
 }
 
 func init() {
@@ -74,6 +76,12 @@ func processArg(fn string) {
 }
 
 func main() {
+	// the _main wrapper exists so deferred function can run
+	// before os.Exit is called.
+	os.Exit(_main())
+}
+
+func _main() int {
 	const myname = "cshatag"
 
 	if GitVersion == "" {
@@ -87,6 +95,7 @@ func main() {
 		"Symbolic links are not followed.")
 	flag.BoolVar(&args.dryrun, "dry-run", false, "don't make any changes")
 	flag.BoolVar(&args.fix, "fix", false, "fix the stored sha256 on corrupt files")
+	flag.StringVar(&args.cpuprofile, "cpuprofile", "", "save cpu profile to specified file")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] FILE [FILE2 ...]\n", myname)
@@ -98,9 +107,24 @@ func main() {
 	if flag.NArg() == 0 {
 		flag.Usage()
 	}
+
 	if args.qq {
 		// quiet2 implies quiet
 		args.q = true
+	}
+
+	if args.cpuprofile != "" {
+		f, err := os.Create(args.cpuprofile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal: %v\n", err)
+			os.Exit(1)
+		}
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Fatal: %v\n", err)
+			os.Exit(1)
+		}
+		defer pprof.StopCPUProfile()
 	}
 
 	for _, fn := range flag.Args() {
@@ -108,27 +132,27 @@ func main() {
 	}
 
 	if stats.decisions[decisionCorrupt] > 0 {
-		os.Exit(5)
+		return 5
 	}
 
 	totalErrors := stats.errorsOpening + stats.errorsNotRegular + stats.errorsWritingXattr +
 		stats.errorsOther
 	if totalErrors > 0 {
 		if stats.errorsOpening == totalErrors {
-			os.Exit(2)
+			return 2
 		} else if stats.errorsNotRegular == totalErrors {
-			os.Exit(3)
+			return 3
 		} else if stats.errorsWritingXattr == totalErrors {
-			os.Exit(4)
+			return 4
 		}
-		os.Exit(6)
+		return 6
 	}
 	if (stats.decisions[decisionOk]+
 		stats.decisions[decisionOutdated]+
 		stats.decisions[decisionTimechange]+
 		stats.decisions[decisionNew])+
 		stats.removed == stats.total {
-		os.Exit(0)
+		return 0
 	}
-	os.Exit(6)
+	return 6
 }
