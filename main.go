@@ -4,9 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"io/fs"
 	"runtime/pprof"
+
+	"github.com/charlievieth/fastwalk"
 )
 
 // GitVersion is set by the Makefile and contains the version string.
@@ -65,7 +66,11 @@ func processArg(fn string) {
 		checkFile(fn)
 	} else if fi.IsDir() {
 		if args.recursive {
-			filepath.WalkDir(fn, walkFn)
+			config := fastwalk.Config{
+				NumWorkers: 1,
+				Sort: fastwalk.SortLexical,
+			}
+			fastwalk.Walk(&config, fn, walkFn)
 		} else {
 			fmt.Fprintf(os.Stderr, "Error: %q is a directory, did you mean to use the '-recursive' option?\n", fn)
 			stats.errorsNotRegular++
