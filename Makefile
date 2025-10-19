@@ -43,3 +43,21 @@ test: cshatag
 release: cshatag cshatag.1
 	tar --owner=root --group=root -czf ${TARGZ} cshatag cshatag.1
 	gpg -u ${GPG_KEY_ID} --armor --detach-sig ${TARGZ}
+
+# According to "tar tf linux-3.0.tar.gz", the file "linux-3.0/virt/kvm/kvm_main.c" is the
+# last one in the tarball. If this one exists, we can be reasonably certain that the tarball
+# was extracted completely.
+#
+# We use /tmp because it is usually a tmpfs, and with a tmpfs the disk speed does not influence
+# the measurement.
+LINUX_LAST_FILE_EXTRACTED=/tmp/linux-3.0/virt/kvm/kvm_main.c
+$(LINUX_LAST_FILE_EXTRACTED):
+	wget https://cdn.kernel.org/pub/linux/kernel/v3.0/linux-3.0.tar.gz -O /tmp/linux-3.0.tar.gz
+	tar xf /tmp/linux-3.0.tar.gz -C /tmp
+	# Initial run is slower because it creates the xattrs.
+	# Run it already here.
+	./cshatag -q -recursive /tmp/linux-3.0
+
+.PHONY: speed
+speed: cshatag $(LINUX_LAST_FILE_EXTRACTED)
+	hyperfine "./cshatag -q -recursive /tmp/linux-3.0"
