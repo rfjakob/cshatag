@@ -84,6 +84,9 @@ DESCRIPTION
 
 OPTIONS
        -dry-run    don't make any changes
+       -j          number of threads. Values <= 0 means auto
+                   (https://pkg.go.dev/github.com/charlievieth/fastwalk#De‐
+       faultNumWorkers).
        -recursive  recursively process the contents of directories
        -remove     remove cshatag's xattrs from FILE
        -q          quiet mode - don't report <ok> files

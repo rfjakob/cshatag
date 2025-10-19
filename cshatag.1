@@ -49,6 +49,9 @@ rewritten in Go in 2019.
 
 -dry-run    don't make any changes
 .br
+-j          number of threads. Values <= 0 means auto
+            (https://pkg.go.dev/github.com/charlievieth/fastwalk#DefaultNumWorkers).
+.br
 -recursive  recursively process the contents of directories
 .br
 -remove     remove cshatag's xattrs from FILE

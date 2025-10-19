@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 	"io/fs"
+	"os"
 	"runtime/pprof"
 
 	"github.com/charlievieth/fastwalk"
@@ -12,17 +12,6 @@ import (
 
 // GitVersion is set by the Makefile and contains the version string.
 var GitVersion = ""
-
-var stats struct {
-	total              int
-	errorsNotRegular   int
-	errorsOpening      int
-	errorsWritingXattr int
-	errorsOther        int
-	inprogress         int
-	removed            int
-	decisions          map[decision]int
-}
 
 var args struct {
 	remove     bool
@@ -32,10 +21,7 @@ var args struct {
 	dryrun     bool
 	fix        bool
 	cpuprofile string
-}
-
-func init() {
-	stats.decisions = make(map[decision]int)
+	jobs       int
 }
 
 // walkFn is used when `cshatag` is called with the `--recursive` option. It is the function called
@@ -43,7 +29,7 @@ func init() {
 func walkFn(path string, info fs.DirEntry, err error) error {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error accessing %q: %v\n", path, err)
-		stats.errorsOpening++
+		stats.errorsOpening.Add(1)
 	} else if info.Type().IsRegular() {
 		checkFile(path)
 	} else if !info.IsDir() {
@@ -61,23 +47,23 @@ func processArg(fn string) {
 	fi, err := os.Lstat(fn) // Using Lstat to be consistent with filepath.Walk for symbolic links.
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		stats.errorsOpening++
+		stats.errorsOpening.Add(1)
 	} else if fi.Mode().IsRegular() {
 		checkFile(fn)
 	} else if fi.IsDir() {
 		if args.recursive {
 			config := fastwalk.Config{
-				NumWorkers: 1,
-				Sort: fastwalk.SortLexical,
+				NumWorkers: args.jobs,
+				Sort:       fastwalk.SortLexical,
 			}
 			fastwalk.Walk(&config, fn, walkFn)
 		} else {
 			fmt.Fprintf(os.Stderr, "Error: %q is a directory, did you mean to use the '-recursive' option?\n", fn)
-			stats.errorsNotRegular++
+			stats.errorsNotRegular.Add(1)
 		}
 	} else {
 		fmt.Fprintf(os.Stderr, "Error: %q is not a regular file.\n", fn)
-		stats.errorsNotRegular++
+		stats.errorsNotRegular.Add(1)
 	}
 }
 
@@ -102,6 +88,7 @@ func _main() int {
 	flag.BoolVar(&args.dryrun, "dry-run", false, "don't make any changes")
 	flag.BoolVar(&args.fix, "fix", false, "fix the stored sha256 on corrupt files")
 	flag.StringVar(&args.cpuprofile, "cpuprofile", "", "save cpu profile to specified file")
+	flag.IntVar(&args.jobs, "j", 0, "Number of threads to use. Default: auto")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s %s\n", myname, GitVersion)
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] FILE [FILE2 ...]\n", myname)
@@ -137,27 +124,27 @@ func _main() int {
 		processArg(fn)
 	}
 
-	if stats.decisions[decisionCorrupt] > 0 {
+	if stats.decisions.corrupt.Load() > 0 {
 		return 5
 	}
 
-	totalErrors := stats.errorsOpening + stats.errorsNotRegular + stats.errorsWritingXattr +
-		stats.errorsOther
+	totalErrors := stats.errorsOpening.Load() + stats.errorsNotRegular.Load() + stats.errorsWritingXattr.Load() +
+		stats.errorsOther.Load()
 	if totalErrors > 0 {
-		if stats.errorsOpening == totalErrors {
+		if stats.errorsOpening.Load() == totalErrors {
 			return 2
-		} else if stats.errorsNotRegular == totalErrors {
+		} else if stats.errorsNotRegular.Load() == totalErrors {
 			return 3
-		} else if stats.errorsWritingXattr == totalErrors {
+		} else if stats.errorsWritingXattr.Load() == totalErrors {
 			return 4
 		}
 		return 6
 	}
-	if (stats.decisions[decisionOk]+
-		stats.decisions[decisionOutdated]+
-		stats.decisions[decisionTimechange]+
-		stats.decisions[decisionNew])+
-		stats.removed == stats.total {
+	if stats.decisions.ok.Load()+
+		stats.decisions.outdated.Load()+
+		stats.decisions.timechange.Load()+
+		stats.decisions.new.Load()+
+		stats.removed.Load() == stats.total.Load() {
 		return 0
 	}
 	return 6

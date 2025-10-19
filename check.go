@@ -163,11 +163,11 @@ func printComparison(stored fileAttr, actual fileAttr) {
 }
 
 func checkFile(fn string) {
-	stats.total++
+	stats.total.Add(1)
 	f, err := os.Open(fn)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		stats.errorsOpening++
+		stats.errorsOpening.Add(1)
 		return
 	}
 	defer f.Close()
@@ -175,13 +175,13 @@ func checkFile(fn string) {
 	if args.remove {
 		if err = removeAttr(f); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-			stats.errorsOther++
+			stats.errorsOther.Add(1)
 			return
 		}
 		if !args.q {
 			fmt.Printf("<removed xattr> %s\n", fn)
 		}
-		stats.removed++
+		stats.removed.Add(1)
 		return
 	}
 
@@ -191,11 +191,11 @@ func checkFile(fn string) {
 		if !args.qq {
 			fmt.Printf("<concurrent modification> %s\n", fn)
 		}
-		stats.inprogress++
+		stats.inprogress.Add(1)
 		return
 	} else if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		stats.errorsOther++
+		stats.errorsOther.Add(1)
 		return
 	}
 
@@ -218,8 +218,8 @@ func checkFile(fn string) {
 	}
 
 	decision := lookupDecision(tsStatus, sha256status)
-	stats.decisions[decision]++
-	if decision == decisionCorrupt {
+	decision.Add(1)
+	if decision == &stats.decisions.corrupt {
 		fixing := " Keeping hash as-is (use -fix to force hash update)."
 		if args.fix {
 			fixing = " Fixing hash (-fix was passed)."
@@ -230,16 +230,16 @@ func checkFile(fn string) {
 		fmt.Printf("<%s> %s\n", decision, fn)
 	}
 
-	if decision != decisionOk && !args.qq {
+	if decision != &stats.decisions.ok && !args.qq {
 		printComparison(stored, actual)
 	}
 
 	// Write updated xattrs
-	if decision != decisionOk && decision != decisionCorrupt || decision == decisionCorrupt && args.fix {
+	if decision != &stats.decisions.ok && decision != &stats.decisions.corrupt || decision == &stats.decisions.corrupt && args.fix {
 		err = storeAttr(f, actual)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-			stats.errorsWritingXattr++
+			stats.errorsWritingXattr.Add(1)
 		}
 	}
 }

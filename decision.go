@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"sync/atomic"
 )
 
 type attrStatus string
@@ -15,39 +16,67 @@ const (
 	attrSame attrStatus = "same"
 )
 
-type decision string
+// decisionWithCount is used to hold both the name of
+// the decision and the count of how often it was hit.
+type decisionWithCount struct {
+	atomic.Uint64
+	name string
+}
 
-const (
-	decisionOk         decision = "ok"
-	decisionCorrupt    decision = "corrupt"
-	decisionTimechange decision = "timechange"
-	decisionOutdated   decision = "outdated"
-	decisionNew        decision = "new"
-)
+func (d *decisionWithCount) String() string {
+	return d.name
+}
+
+type decisions struct {
+	ok         decisionWithCount
+	corrupt    decisionWithCount
+	timechange decisionWithCount
+	outdated   decisionWithCount
+	new        decisionWithCount
+}
+
+var stats = struct {
+	total              atomic.Uint64
+	errorsNotRegular   atomic.Uint64
+	errorsOpening      atomic.Uint64
+	errorsWritingXattr atomic.Uint64
+	errorsOther        atomic.Uint64
+	inprogress         atomic.Uint64
+	removed            atomic.Uint64
+	decisions          decisions
+}{
+	decisions: decisions{
+		ok:         decisionWithCount{name: "ok"},
+		corrupt:    decisionWithCount{name: "corrupt"},
+		timechange: decisionWithCount{name: "timechange"},
+		outdated:   decisionWithCount{name: "outdated"},
+		new:        decisionWithCount{name: "new"},
+	},
+}
 
 var decisionTable = []struct {
 	tsStatus     attrStatus
 	sha256Status attrStatus
-	decision     decision
+	decision     *decisionWithCount
 }{
 	// ts      sha256    decision
-	{attrSame, attrSame, decisionOk},
-	{attrSame, attrDiff, decisionCorrupt},
-	{attrSame, attrMiss, decisionNew}, // or decisionOutdated?
-	{attrDiff, attrSame, decisionTimechange},
-	{attrDiff, attrDiff, decisionOutdated},
-	{attrDiff, attrMiss, decisionOutdated},
-	{attrMiss, attrSame, decisionTimechange},
-	{attrMiss, attrDiff, decisionOutdated},
-	{attrMiss, attrMiss, decisionNew},
+	{attrSame, attrSame, &stats.decisions.ok},
+	{attrSame, attrDiff, &stats.decisions.corrupt},
+	{attrSame, attrMiss, &stats.decisions.new}, // or outdated?
+	{attrDiff, attrSame, &stats.decisions.timechange},
+	{attrDiff, attrDiff, &stats.decisions.outdated},
+	{attrDiff, attrMiss, &stats.decisions.outdated},
+	{attrMiss, attrSame, &stats.decisions.timechange},
+	{attrMiss, attrDiff, &stats.decisions.outdated},
+	{attrMiss, attrMiss, &stats.decisions.new},
 }
 
-func lookupDecision(tsStatus, sha256Status attrStatus) decision {
+func lookupDecision(tsStatus, sha256Status attrStatus) *decisionWithCount {
 	for _, v := range decisionTable {
 		if v.tsStatus == tsStatus && v.sha256Status == sha256Status {
 			return v.decision
 		}
 	}
 	log.Panicf("No decision for tsStatus=%v sha256Status=%v", tsStatus, sha256Status)
-	return ""
+	return nil
 }
