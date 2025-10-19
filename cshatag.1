@@ -23,9 +23,8 @@ extended attributes. The filesystem needs to be mounted with
 user_xattr enabled for this to work.
 When run again, it compares stored mtime and checksum. If it
 finds that the mtime is unchanged but the checksum has changed,
-it warns on stderr.
-In any case, the status of the file is printed to stdout
-and the stored checksum is updated.
+it warns on stderr and reports a <corrupt> status.
+In any case, the status of the file is printed to stdout.
 
 File statuses that appear on stdout are:
 .br
@@ -38,6 +37,10 @@ File statuses that appear on stdout are:
 	<timechange>  only mtime has changed, checksum stayed the same
 .br
 	<corrupt>     mtime stayed the same but checksum changed
+
+When a file is considered <corrupt>, the stored checksum is
+only updated if "-fix" is passed. For all other statuses
+except <ok>, the stored checksum is always updated.
 
 cshatag aims to be format-compatible with shatag and uses the
 same extended attributes (see the COMPATIBILITY section).
