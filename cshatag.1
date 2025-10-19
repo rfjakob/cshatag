@@ -50,20 +50,24 @@ rewritten in Go in 2019.
 
 .SH OPTIONS
 
+-cpuprofile save cpu profile to specified file. This is useful
+            for diagnosing performance issues.
+.br
 -dry-run    don't make any changes
+.br
+-fix        fix the stored sha256 on corrupt files
 .br
 -j          number of threads. Values <= 0 means auto
             (https://pkg.go.dev/github.com/charlievieth/fastwalk#DefaultNumWorkers).
-.br
--recursive  recursively process the contents of directories
-.br
--remove     remove cshatag's xattrs from FILE
 .br
 -q          quiet mode - don't report <ok> files
 .br
 -qq         quiet2 mode - only report <corrupt> files and errors
 .br
--fix        fix the stored sha256 on corrupt files
+-recursive  recursively process the contents of directories
+.br
+-remove     remove cshatag's xattrs from FILE
+
 
 .SH EXAMPLES
 
