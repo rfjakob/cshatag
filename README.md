@@ -67,8 +67,8 @@ DESCRIPTION
        The  filesystem  needs to be mounted with user_xattr enabled for this to
        work.  When run again, it compares stored  mtime  and  checksum.  If  it
        finds that the mtime is unchanged but the checksum has changed, it warns
-       on stderr.  In any case, the status of the file is printed to stdout and
-       the stored checksum is updated.
+       on  stderr  and  reports a <corrupt> status.  In any case, the status of
+       the file is printed to stdout.
 
        File statuses that appear on stdout are:
             <new>         file is missing both attributes
@@ -77,21 +77,27 @@ DESCRIPTION
             <timechange>  only mtime has changed, checksum stayed the same
             <corrupt>     mtime stayed the same but checksum changed
 
+       When a file is considered <corrupt>, the stored checksum is only updated
+       if "-fix" is passed. For all other  statuses  except  <ok>,  the  stored
+       checksum is always updated.
+
        cshatag  aims  to be format-compatible with shatag and uses the same ex‐
        tended attributes (see the COMPATIBILITY section).
 
        cshatag was written in C in 2012 and has been rewritten in Go in 2019.
 
 OPTIONS
+       -cpuprofile save cpu profile to specified file. This is useful
+                   for diagnosing performance issues.
        -dry-run    don't make any changes
+       -fix        fix the stored sha256 on corrupt files
        -j          number of threads. Values <= 0 means auto
                    (https://pkg.go.dev/github.com/charlievieth/fastwalk#De‐
        faultNumWorkers).
-       -recursive  recursively process the contents of directories
-       -remove     remove cshatag's xattrs from FILE
        -q          quiet mode - don't report <ok> files
        -qq         quiet2 mode - only report <corrupt> files and errors
-       -fix        fix the stored sha256 on corrupt files
+       -recursive  recursively process the contents of directories
+       -remove     remove cshatag's xattrs from FILE
 
 EXAMPLES
        Check all regular files in the file tree below the current  working  di‐
