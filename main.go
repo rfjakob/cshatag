@@ -68,7 +68,7 @@ func processArg(fn string) {
 }
 
 func main() {
-	// the _main wrapper exists so deferred function can run
+	// the _main wrapper exists so deferred functions can run
 	// before os.Exit is called.
 	os.Exit(_main())
 }

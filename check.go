@@ -154,32 +154,42 @@ func getActualAttr(f *os.File) (attr fileAttr, err error) {
 	return attr, nil
 }
 
-// printComparison prints something like this:
+// prettyComparison returns something like this:
 //
 //	stored: faa28bfa6332264571f28b4131b0673f0d55a31a2ccf5c873c435c235647bf76 1560177189.769244818
 //	actual: dc9fe2260fd6748b29532be0ca2750a50f9eca82046b15497f127eba6dda90e8 1560177334.020775051
-func printComparison(stored fileAttr, actual fileAttr) {
-	fmt.Printf(" stored: %s\n actual: %s\n", stored.prettyPrint(), actual.prettyPrint())
+func prettyComparison(stored fileAttr, actual fileAttr) string {
+	return fmt.Sprintf(" stored: %s\n actual: %s\n", stored.prettyPrint(), actual.prettyPrint())
 }
 
 func checkFile(fn string) {
 	stats.total.Add(1)
 	f, err := os.Open(fn)
 	if err != nil {
+		// The error contains the file name
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		stats.errorsOpening.Add(1)
 		return
 	}
 	defer f.Close()
 
+	// We want to print multiple lines that should appear as one one
+	// block despite multithreading. Accumulate all into a strings.Builder
+	// and write them out in one call.
+	var b strings.Builder
+	// This closure is needed, otherwise b.String() is executed already here
+	// and returns an empty string.
+	defer func() { fmt.Print(b.String()) }()
+
 	if args.remove {
 		if err = removeAttr(f); err != nil {
+			// The error contains the file name
 			fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 			stats.errorsOther.Add(1)
 			return
 		}
 		if !args.q {
-			fmt.Printf("<removed xattr> %s\n", fn)
+			b.WriteString(fmt.Sprintf("<removed xattr> %s\n", fn))
 		}
 		stats.removed.Add(1)
 		return
@@ -189,7 +199,7 @@ func checkFile(fn string) {
 	actual, err := getActualAttr(f)
 	if err == syscall.EINPROGRESS {
 		if !args.qq {
-			fmt.Printf("<concurrent modification> %s\n", fn)
+			b.WriteString(fmt.Sprintf("<concurrent modification> %s\n", fn))
 		}
 		stats.inprogress.Add(1)
 		return
@@ -227,11 +237,11 @@ func checkFile(fn string) {
 		fmt.Fprintf(os.Stderr, "Error: corrupt file %q. %s\n", fn, fixing)
 	}
 	if !args.q {
-		fmt.Printf("<%s> %s\n", decision, fn)
+		b.WriteString(fmt.Sprintf("<%s> %s\n", decision, fn))
 	}
 
 	if decision != &stats.decisions.ok && !args.qq {
-		printComparison(stored, actual)
+		b.WriteString(prettyComparison(stored, actual))
 	}
 
 	// Write updated xattrs
