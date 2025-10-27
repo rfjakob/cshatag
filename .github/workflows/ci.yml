@@ -26,7 +26,7 @@ jobs:
 
     - run: make test
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: cshatag static binary
         path: cshatag
