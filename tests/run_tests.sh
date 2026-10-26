@@ -153,7 +153,7 @@ rm -f symlink1
 echo same > foo.txt
 touch -t 201812312300 foo.txt foo.txt
 ../cshatag foo.txt > /dev/null
-TZ=CET touch -t 201901010001 foo.txt
+touch -t 201812312301 foo.txt
 ../cshatag foo.txt > 6.out
 diff -u 6.expected 6.out
 rm foo.txt
