@@ -2,6 +2,7 @@
 
 function setup() {
 	cd "$(dirname "$BATS_TEST_FILENAME")"
+	export TZ=UTC
 }
 
 # Print hex encoded user.shatag.sha256 for file $1
@@ -44,7 +45,7 @@ function set_ts() {
 
 @test "Testing new empty file" {
 rm -f foo.txt
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt
 ../cshatag foo.txt > 1.out
 diff -u 1.expected 1.out
 ../cshatag foo.txt > 2.out
@@ -53,7 +54,7 @@ diff -u 2.expected 2.out
 
 @test "Testing outdated file" {
 echo changed > foo.txt
-TZ=CET touch -t 202001010000 foo.txt
+touch -t 201912312300 foo.txt
 ../cshatag foo.txt > 3.out
 diff -u 3.expected 3.out
 }
@@ -90,7 +91,7 @@ echo "00000000000000000000000000000000000000000000000000000000000000000000000000
 
 @test "Testing cshatag v1.0 format with appended NULL byte" {
 rm -f foo.txt
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt foo.txt
 set_ts "1546297200.000000000" "foo.txt"
 set_sha256 "6533623063343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500" "foo.txt"
 ../cshatag foo.txt > /dev/null
@@ -103,7 +104,7 @@ set_sha256 "65336230633434323938666331633134396166626634633839393666623932343237
 
 @test "Corrupt file should be flagged" {
 echo "123" > foo.txt
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt foo.txt
 run ../cshatag foo.txt &> /dev/null
 [ "$status" -ne 0 ]
 }
@@ -120,7 +121,7 @@ run ../cshatag -fix foo.txt &> /dev/null
 
 @test "Testing removal of extended attributes" {
 rm -f foo.txt
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt foo.txt
 ../cshatag foo.txt > 1.out
 diff -u 1.expected 1.out
 ../cshatag --remove foo.txt > 4.out
@@ -150,7 +151,7 @@ rm -f symlink1
 
 @test "Testing timechange" {
 echo same > foo.txt
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt foo.txt
 ../cshatag foo.txt > /dev/null
 TZ=CET touch -t 201901010001 foo.txt
 ../cshatag foo.txt > 6.out
@@ -161,7 +162,7 @@ rm foo.txt
 @test "Testing recursive flag" {
 rm -rf foo
 mkdir foo
-TZ=CET touch -t 201901010000 foo/foo.txt
+touch -t 201812312300 foo.txt foo/foo.txt
 run bash -c "../cshatag foo 2> 7.err"
 [ "$status" -eq 3 ]
 diff -u 7.expected 7.err
@@ -171,7 +172,7 @@ rm -rf foo
 }
 
 @test 'Testing -dry-run' {
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt foo.txt
 ../cshatag -dry-run foo.txt > 9.out
 diff -u 9.expected 9.out
 # Because with -n we have made no changes, we get the same output again.
@@ -203,14 +204,14 @@ run ../cshatag foo.txt &> /dev/null
 # https://github.com/rfjakob/cshatag/issues/39
 # Tool thinks flatpak repo files are corrupted even without xattrs
 rm -rf foo.txt
-TZ=UTC touch -t 197001010000 foo.txt
+touch -t 197001010000 foo.txt
 ../cshatag foo.txt &> 12.out
 diff -u 12.expected 12.out
 }
 
 @test "Empty shatag.ts xattr" {
 rm -rf foo.txt
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt foo.txt
 ../cshatag foo.txt
 set_ts "" foo.txt
 ../cshatag foo.txt &> 13.out
@@ -219,7 +220,7 @@ diff -u 13.expected 13.out
 
 @test "Non-decimal shatag.ts xattr" {
 rm -rf foo.txt
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt foo.txt
 ../cshatag foo.txt
 set_ts "foo" foo.txt
 ../cshatag foo.txt &> 14.out
@@ -228,7 +229,7 @@ diff -u 14.expected 14.out
 
 @test "Non-hex shatag.sha256 xattr" {
 rm -rf foo.txt
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt foo.txt
 ../cshatag foo.txt
 # "78797A" = "xyz"
 set_sha256 78797A63343432393866633163313439616662663463383939366662393234323761653431653436343962393334636134393539393162373835326238353500 foo.txt
@@ -240,7 +241,7 @@ diff -u 15.expected 15.out
 # https://github.com/rfjakob/cshatag/issues/41
 # Tool thinks file is corrupted when theres too little space in extended attributes
 rm -rf foo.txt
-TZ=CET touch -t 201901010000 foo.txt
+touch -t 201812312300 foo.txt foo.txt
 ../cshatag foo.txt
 set_sha256 "" foo.txt
 ../cshatag foo.txt &> 16.out
